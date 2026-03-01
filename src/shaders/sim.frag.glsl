@@ -15,12 +15,17 @@ void main() {
     int x = int(gl_FragCoord.x);
 
     // Build pattern index from neighborhood (MSB = leftmost)
+    // Out-of-bounds cells read as 0
     int idx = 0;
     for (int j = 0; j < MAX_RULE_WIDTH; j++) {
         if (j >= u_ruleWidth) break;
-        int nx = ((x - u_leftCtx + j) % u_width + u_width) % u_width;
-        float cell = texelFetch(u_currentGen, ivec2(nx, 0), 0).r;
-        idx = (idx << 1) | (cell > 0.5 ? 1 : 0);
+        int nx = x - u_leftCtx + j;
+        int bit = 0;
+        if (nx >= 0 && nx < u_width) {
+            float cell = texelFetch(u_currentGen, ivec2(nx, 0), 0).r;
+            bit = cell > 0.5 ? 1 : 0;
+        }
+        idx = (idx << 1) | bit;
     }
 
     // Look up output in truth table
