@@ -13,6 +13,7 @@ const zoomEl = document.getElementById("zoom") as HTMLInputElement;
 const seedEl = document.getElementById("seed") as HTMLInputElement;
 const seedBandEl = document.getElementById("seedBand") as HTMLInputElement;
 const stepsAutoEl = document.getElementById("stepsAuto") as HTMLInputElement;
+const autoUpdateEl = document.getElementById("autoUpdate") as HTMLInputElement;
 const newRandomBtn = document.getElementById("newRandom") as HTMLButtonElement;
 const canvasEl = document.getElementById("canvas") as HTMLCanvasElement;
 const SCALE_PRESETS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50];
@@ -57,7 +58,7 @@ function setScale(nextValue: number): void {
 
 function normalizeSeed(nextValue: number): number {
   if (!Number.isFinite(nextValue)) return 1;
-  return Math.max(0, Math.min(0xffffffff, Math.floor(nextValue)));
+  return Math.max(0, Math.floor(nextValue));
 }
 
 function setSeed(nextValue: number): void {
@@ -154,19 +155,19 @@ function setupNumberControls(): void {
 
     upBtn.addEventListener("click", () => {
       updateNumberInputByStep(input, 1);
-      input.dispatchEvent(new Event("change", { bubbles: true }));
+      input.dispatchEvent(new Event("input", { bubbles: true }));
     });
 
     downBtn.addEventListener("click", () => {
       updateNumberInputByStep(input, -1);
-      input.dispatchEvent(new Event("change", { bubbles: true }));
+      input.dispatchEvent(new Event("input", { bubbles: true }));
     });
 
     input.addEventListener("wheel", (event) => {
       event.preventDefault();
       const direction: 1 | -1 = event.deltaY < 0 ? 1 : -1;
       updateNumberInputByStep(input, direction);
-      input.dispatchEvent(new Event("change", { bubbles: true }));
+      input.dispatchEvent(new Event("input", { bubbles: true }));
     }, { passive: false });
 
     spinWrap.append(upBtn, downBtn);
@@ -199,58 +200,69 @@ function onUpdate(): void {
   simInfoEl.textContent = `${rule.name} | ${currentSteps} steps | ${currentWidth} cells | seed ${currentSeed} | center ${currentSeedBand}px | ${dt}ms`;
 }
 
+function requestUpdate(): void {
+  if (!autoUpdateEl.checked) return;
+  onUpdate();
+}
+
 // ── Events ───────────────────────────────────────────────────
 
-rulesEl.addEventListener("input", onUpdate);
+rulesEl.addEventListener("input", requestUpdate);
 
 newRandomBtn.addEventListener("click", () => {
   setSeed(Math.floor(Math.random() * 0x100000000));
   renderer.randomize(currentWidth, currentSeed, currentSeedBand);
-  onUpdate();
+  requestUpdate();
 });
 
-stepsEl.addEventListener("change", () => {
+stepsEl.addEventListener("input", () => {
   if (stepsAutoEl.checked) {
     syncAutoSteps();
     return;
   }
   currentSteps = Math.max(1, parseInt(stepsEl.value) || 100);
   ensureSize();
-  onUpdate();
+  requestUpdate();
 });
 
-widthEl.addEventListener("change", () => {
+widthEl.addEventListener("input", () => {
   currentWidth = Math.max(11, parseInt(widthEl.value) || 201);
   syncAutoSteps();
   ensureSize();
-  onUpdate();
+  requestUpdate();
 });
 
-zoomEl.addEventListener("change", () => {
+zoomEl.addEventListener("input", () => {
   setScale(Number(zoomEl.value) || 5);
+  requestUpdate();
 });
 
-seedEl.addEventListener("change", () => {
+seedEl.addEventListener("input", () => {
   setSeed(Number(seedEl.value));
   renderer.randomize(currentWidth, currentSeed, currentSeedBand);
-  onUpdate();
+  requestUpdate();
 });
 
-seedBandEl.addEventListener("change", () => {
+seedBandEl.addEventListener("input", () => {
   setSeedBand(Number(seedBandEl.value));
   syncAutoSteps();
   if (stepsAutoEl.checked) {
     ensureSize();
-    onUpdate();
+    requestUpdate();
     return;
   }
   renderer.randomize(currentWidth, currentSeed, currentSeedBand);
-  onUpdate();
+  requestUpdate();
 });
 
 stepsAutoEl.addEventListener("change", () => {
   applyStepsAutoMode();
   ensureSize();
+  requestUpdate();
+});
+
+autoUpdateEl.addEventListener("change", () => {
+  if (!autoUpdateEl.checked) return;
   onUpdate();
 });
 

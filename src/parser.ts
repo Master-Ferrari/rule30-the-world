@@ -1,4 +1,4 @@
-/** Rule parser — same syntax as the Python version: left(center)right>output */
+/** Rule parser — syntax: left(center)right>output with 0/1/x input symbols. */
 
 export interface ParsedEntry {
   pattern: number[];
@@ -16,32 +16,32 @@ export interface ComposedRule {
   name: string;
 }
 
-const LINE_RE = /^([01]*)\(([01])\)([01]*)>([01])$/;
+const LINE_RE = /^([01x]*)\(([01x])\)([01x]*)>([01])$/;
 
 /**
- * Parse a single rule line like `0(1)0>1`.
+ * Parse a single rule line like `0(1)0>1` or `1(x)1>1`.
  * Returns null for blank/comment lines. Throws on bad syntax.
  */
-export function parseRuleLine(raw: string): ParsedEntry | null {
-  const line = raw.trim().replace(/\s/g, "");
+export function parseRuleLine(raw: string): ParsedEntry[] | null {
+  const line = raw.trim().replace(/\s/g, "").toLowerCase();
   if (!line || line.startsWith("#")) return null;
 
   const m = line.match(LINE_RE);
   if (!m) throw new Error(`Bad syntax: '${raw.trim()}'`);
 
   const [, leftStr, centerStr, rightStr, outStr] = m;
-  const pattern = [
-    ...leftStr.split("").map(Number),
-    Number(centerStr),
-    ...rightStr.split("").map(Number),
-  ];
+  const tokens = [...leftStr, centerStr, ...rightStr];
+  const expandedPatterns = expandTokens(tokens);
+  const leftCtx = leftStr.length;
+  const rightCtx = rightStr.length;
+  const output = Number(outStr);
 
-  return {
+  return expandedPatterns.map((pattern) => ({
     pattern,
-    leftCtx: leftStr.length,
-    rightCtx: rightStr.length,
-    output: Number(outStr),
-  };
+    leftCtx,
+    rightCtx,
+    output,
+  }));
 }
 
 /**
@@ -53,7 +53,7 @@ export function parseText(text: string): { entries: ParsedEntry[]; errors: numbe
   for (const line of text.split("\n")) {
     try {
       const e = parseRuleLine(line);
-      if (e) entries.push(e);
+      if (e) entries.push(...e);
     } catch {
       errors++;
     }
@@ -108,31 +108,82 @@ export function fromEntries(entries: ParsedEntry[]): ComposedRule {
     }
   }
 
-  const name = computeRuleName(table, width);
+  const name = computeRuleName(entries);
   return { leftCtx: effLeft, rightCtx: effRight, width, nPatterns, table, name };
 }
 
 /**
  * Compute rule name like "rule30base3".
+ * Name numbering uses symmetric base: max offset on each side.
  */
-function computeRuleName(table: Uint8Array, width: number): string {
-  // Rule number = decimal value of output bits (bit i = output for pattern i)
-  // For large tables this is a BigInt
-  if (width <= 5) {
-    let n = 0;
-    for (let i = 0; i < table.length; i++) {
-      if (table[i]) n |= 1 << i;
+function computeRuleName(entries: ParsedEntry[]): string {
+  const base = computeNameBase(entries);
+  const maxOffset = (base - 1) / 2;
+  const nPatterns = 1 << base;
+  const nameTable = new Uint8Array(nPatterns);
+
+  // Expand each parsed rule to symmetric base by adding don't-care bits.
+  for (const entry of entries) {
+    const extraLeft = maxOffset - entry.leftCtx;
+    const extraRight = maxOffset - entry.rightCtx;
+    const nLeft = 1 << extraLeft;
+    const nRight = 1 << extraRight;
+
+    for (let lc = 0; lc < nLeft; lc++) {
+      for (let rc = 0; rc < nRight; rc++) {
+        let idx = 0;
+        for (let j = 0; j < extraLeft; j++) {
+          idx = (idx << 1) | ((lc >> (extraLeft - 1 - j)) & 1);
+        }
+        for (const bit of entry.pattern) {
+          idx = (idx << 1) | bit;
+        }
+        for (let j = 0; j < extraRight; j++) {
+          idx = (idx << 1) | ((rc >> (extraRight - 1 - j)) & 1);
+        }
+        nameTable[idx] = entry.output;
+      }
     }
-    return `rule${n}base${width}`;
   }
-  // For larger tables, use BigInt
+
+  if (base <= 5) {
+    let n = 0;
+    for (let i = 0; i < nameTable.length; i++) {
+      if (nameTable[i]) n |= 1 << i;
+    }
+    return `rule${n}base${base}`;
+  }
+
   let n = 0n;
-  for (let i = 0; i < table.length; i++) {
-    if (table[i]) n |= 1n << BigInt(i);
+  for (let i = 0; i < nameTable.length; i++) {
+    if (nameTable[i]) n |= 1n << BigInt(i);
   }
   const s = n.toString();
   if (s.length > 12) {
-    return `rule${s.slice(0, 10)}..base${width}`;
+    return `rule${s.slice(0, 10)}..base${base}`;
   }
-  return `rule${s}base${width}`;
+  return `rule${s}base${base}`;
+}
+
+function computeNameBase(entries: ParsedEntry[]): number {
+  if (entries.length === 0) return 1;
+  const maxOffset = Math.max(...entries.map((entry) => Math.max(entry.leftCtx, entry.rightCtx)));
+  return maxOffset * 2 + 1;
+}
+
+function expandTokens(tokens: string[]): number[][] {
+  let patterns: number[][] = [[]];
+  for (const token of tokens) {
+    if (token === "x") {
+      const next: number[][] = [];
+      for (const pattern of patterns) {
+        next.push([...pattern, 0], [...pattern, 1]);
+      }
+      patterns = next;
+      continue;
+    }
+    const bit = Number(token);
+    patterns = patterns.map((pattern) => [...pattern, bit]);
+  }
+  return patterns;
 }

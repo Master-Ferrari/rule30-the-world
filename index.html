@@ -8,26 +8,29 @@
 <body>
   <div id="app">
     <div id="leftHeader">
-      <p class="help">Format: left(center)right&gt;output &nbsp; e.g. 0(1)0&gt;1</p>
+      <p class="help">Format: left(center)right&gt;output (0/1/x) &nbsp; e.g. 1(x)1&gt;1</p>
       <div id="info"></div>
     </div>
     <div id="rightHeader">
-      <label>Width <input type="number" id="width" value="300" min="11" max="2000" step="10"></label>
-      <label>Scale <input type="number" id="zoom" value="5" min="1" max="50" step="1"></label>
-      <label>Seed <input type="number" id="seed" value="1" min="0" max="4294967295" step="1"></label>
-      <label>Center <input type="number" id="seedBand" value="20" min="1" max="2000" step="1"></label>
+      <label>Width <input type="number" id="width" value="750" min="11" step="10"></label>
+      <label>Scale <input type="number" id="zoom" value="2" min="1" step="1"></label>
+      <label>Seed <input type="number" id="seed" value="5" min="0" step="1"></label>
+      <label>Center <input type="number" id="seedBand" value="25" min="1" step="1"></label>
       <button id="newRandom" class="controlButton">New Random</button>
       <span id="stepsAutoGroup">
-        <label>Steps <input type="number" id="steps" value="100" min="1" max="2000"></label>
-        <label class="checkboxControl"><input type="checkbox" id="stepsAuto" checked>Auto</label>
+        <label>Steps <input type="number" id="steps" value="2000" min="1"></label>
+        <label class="checkboxControl"><input type="checkbox" id="stepsAuto">Auto</label>
+        <label class="checkboxControl"><input type="checkbox" id="autoUpdate" checked>AutoUpdate</label>
       </span>
       <span id="simInfo"></span>
     </div>
-    <textarea id="rules" spellcheck="false"># Rule 30
-1(0)0>1
-0(1)1>1
-0(1)0>1
-0(0)1>1
+    <textarea id="rules" spellcheck="false"># creepers
+10(1)01>1
+01(1)10>1
+01(0)10>1
+01(0)00>1
+00(0)10>1
+1(1)1>1
 </textarea>
     <div id="splitter"></div>
     <div id="canvasWrap">
