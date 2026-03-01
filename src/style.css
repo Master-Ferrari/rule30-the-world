@@ -1,0 +1,311 @@
+/* ── Design system ─────────────────────────
+   Font:    PT Mono
+   Spacing: 8px base unit
+   Colors:  #0a0a0a bg, #141414 surface, #1e1e1e elevated
+            #e0e0e0 text, #666 muted, #333 border
+   Radius:  0
+   Shadows: none
+   ──────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=PT+Mono&display=swap');
+
+:root {
+  --sp: 8px;
+  --bg: #0a0a0a;
+  --surface: #141414;
+  --elevated: #1e1e1e;
+  --border: #272727;
+  --border-focus: #444;
+  --text: #e0e0e0;
+  --text-muted: #666;
+  --accent: #888;
+  --left-w: 320px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  font-family: 'PT Mono', monospace;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* ── Grid layout ─────────────────────── */
+
+#app {
+  display: grid;
+  grid-template-columns: var(--left-w) var(--sp) 1fr;
+  grid-template-rows: auto 1fr;
+  column-gap: 0;
+  row-gap: var(--sp);
+  height: 100vh;
+  padding: var(--sp);
+}
+
+/* ── Header row ──────────────────────── */
+
+#leftHeader {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 4px;
+  min-width: 0;
+}
+
+.help {
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+#info {
+  font-size: 10px;
+  color: var(--text-muted);
+  min-height: 14px;
+}
+
+#rightHeader {
+  grid-column: 3;
+  grid-row: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: calc(var(--sp) * 2);
+  font-size: 11px;
+  color: var(--accent);
+  min-width: 0;
+}
+
+#rightHeader label {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--sp) / 2);
+  white-space: nowrap;
+}
+
+#stepsAutoGroup {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--sp);
+}
+
+.checkboxControl {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.checkboxControl input[type="checkbox"] {
+  width: 11px;
+  height: 11px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.checkboxControl input[type="checkbox"]:hover {
+  border-color: var(--border-focus);
+}
+
+.checkboxControl input[type="checkbox"]:checked {
+  background: var(--elevated);
+  box-shadow: inset 0 0 0 2px var(--bg), inset 0 0 0 999px var(--accent);
+}
+
+#rightHeader input[type="number"] {
+  width: 52px;
+  padding: 4px 16px 4px 6px;
+  font: 11px 'PT Mono', monospace;
+  background: var(--elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  outline: none;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+#rightHeader input[type="number"]:focus {
+  border-color: var(--border-focus);
+}
+
+#rightHeader input[type="number"]:disabled {
+  color: var(--text-muted);
+}
+
+#rightHeader input[type="number"]::-webkit-outer-spin-button,
+#rightHeader input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.numberControl {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.numberSpinButtons {
+  position: absolute;
+  right: 0px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+}
+
+.numberSpinButton {
+  all: unset;
+  width: 15px;
+  height: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.numberSpinIcon {
+  width: 9px;
+  height: 5px;
+  display: block;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.numberSpinButton:hover {
+  color: var(--text);
+}
+
+.numberSpinButton:active {
+  color: var(--accent);
+}
+
+.numberControlDisabled .numberSpinButtons {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+#seed {
+  width: 88px;
+}
+
+#seedBand {
+  width: 72px;
+}
+
+.controlButton {
+  padding: 4px 12px;
+  font: 11px 'PT Mono', monospace;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 0;
+  background: var(--surface);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.controlButton:hover {
+  background: var(--elevated);
+  border-color: var(--border-focus);
+}
+
+.controlButton:active {
+  background: var(--border);
+}
+
+#simInfo {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: var(--sp);
+  white-space: nowrap;
+}
+
+/* ── Splitter ────────────────────────── */
+
+#splitter {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  cursor: col-resize;
+}
+
+/* ── Content row ─────────────────────── */
+
+#rules {
+  grid-column: 1;
+  grid-row: 2;
+  width: 100%;
+  height: 100%;
+  font: 13px/1.6 'PT Mono', monospace;
+  background: var(--elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  padding: var(--sp);
+  resize: none;
+  outline: none;
+  tab-size: 4;
+  min-height: 0;
+}
+
+#rules:focus {
+  border-color: var(--border-focus);
+}
+
+#rules::selection {
+  background: #264f78;
+}
+
+#canvasWrap {
+  grid-column: 3;
+  grid-row: 2;
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 0;
+  min-height: 0;
+}
+
+/* Scrollbar styling */
+#canvasWrap::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+#canvasWrap::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+#canvasWrap::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+#canvasWrap::-webkit-scrollbar-thumb:hover {
+  background: var(--border-focus);
+}
+
+#canvas {
+  display: block;
+  transform-origin: 0 0;
+  image-rendering: pixelated;
+}
+
+/* ── Drag state ──────────────────────── */
+
+#app.dragging,
+#app.dragging * {
+  user-select: none;
+}

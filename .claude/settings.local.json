@@ -3,7 +3,11 @@
     "allow": [
       "Bash(python -c \"from src.automaton import Rule, Grid; r = Rule\\(30\\); g = Grid\\(51, r\\); g.init_random\\(\\); g.step_n\\(10\\); a = g.as_array\\(\\); print\\(f''Shape: {a.shape}, gen: {g.generation}''\\); print\\(a[:3]\\)\")",
       "Bash(timeout 5 python main.py)",
-      "Bash(python -c \":*)"
+      "Bash(python -c \":*)",
+      "Bash(git checkout -b web)",
+      "Bash(npm create vite@latest . -- --template vanilla-ts)",
+      "Bash(npx tsc --noEmit)",
+      "mcp__Claude_Preview__preview_start"
     ]
   }
 }

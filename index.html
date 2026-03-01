@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rule Predictor — Cellular Automaton</title>
+</head>
+<body>
+  <div id="app">
+    <div id="leftHeader">
+      <p class="help">Format: left(center)right&gt;output &nbsp; e.g. 0(1)0&gt;1</p>
+      <div id="info"></div>
+    </div>
+    <div id="rightHeader">
+      <label>Width <input type="number" id="width" value="201" min="11" max="2000" step="10"></label>
+      <label>Scale <input type="number" id="zoom" value="5" min="1" max="50" step="1"></label>
+      <label>Seed <input type="number" id="seed" value="1" min="0" max="4294967295" step="1"></label>
+      <label>Center <input type="number" id="seedBand" value="20" min="1" max="2000" step="1"></label>
+      <button id="newRandom" class="controlButton">New Random</button>
+      <span id="stepsAutoGroup">
+        <label>Steps <input type="number" id="steps" value="100" min="1" max="2000"></label>
+        <label class="checkboxControl"><input type="checkbox" id="stepsAuto">Auto</label>
+      </span>
+      <span id="simInfo"></span>
+    </div>
+    <textarea id="rules" spellcheck="false"># Rule 30
+1(0)0>1
+0(1)1>1
+0(1)0>1
+0(0)1>1
+</textarea>
+    <div id="splitter"></div>
+    <div id="canvasWrap">
+      <canvas id="canvas"></canvas>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
