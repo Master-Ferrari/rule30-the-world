@@ -1,14 +1,34 @@
 """Cellular automaton rules with configurable neighborhood width."""
 
+import re
 import numpy as np
+
+_LINE_RE = re.compile(r'^([01]*)\(([01])\)([01]*)>([01])$')
+
+
+def parse_rule_line(raw: str):
+    """Parse a rule line like '0(1)0>1'.
+
+    Returns (pattern_tuple, left_ctx, right_ctx, output) or None
+    for blank/comment lines.  Raises ValueError on bad syntax.
+    """
+    line = raw.strip().replace(' ', '')
+    if not line or line.startswith('#'):
+        return None
+    m = _LINE_RE.match(line)
+    if not m:
+        raise ValueError(f"Bad syntax: '{raw.strip()}'")
+    left_s, center_s, right_s, out_s = m.groups()
+    pattern = (
+        tuple(int(c) for c in left_s)
+        + (int(center_s),)
+        + tuple(int(c) for c in right_s)
+    )
+    return pattern, len(left_s), len(right_s), int(out_s)
 
 
 class Rule:
-    """CA rule with variable left/right context.
-
-    For left_ctx=1, right_ctx=1 — classic elementary CA (8 patterns).
-    Wider contexts grow the truth table as 2^(left+1+right).
-    """
+    """CA rule with variable left/right context."""
 
     def __init__(
         self,
@@ -42,10 +62,47 @@ class Rule:
             rule._table[pattern] = (number >> i) & 1
         return rule
 
+    @classmethod
+    def from_entries(
+        cls,
+        entries: list[tuple[tuple[int, ...], int, int, int]],
+    ) -> "Rule":
+        """Build composed rule from parsed text entries.
+
+        Each entry is (pattern, left_ctx, right_ctx, output).
+        Narrower patterns applied first; wider ones override.
+        """
+        if not entries:
+            return cls(left_ctx=0, right_ctx=0)
+
+        eff_left = max(e[1] for e in entries)
+        eff_right = max(e[2] for e in entries)
+        effective = cls(left_ctx=eff_left, right_ctx=eff_right)
+
+        # Sort by width ascending (narrow = general, wide = specific override)
+        sorted_entries = sorted(entries, key=lambda e: e[1] + 1 + e[2])
+
+        for pattern, left_ctx, right_ctx, output in sorted_entries:
+            extra_left = eff_left - left_ctx
+            extra_right = eff_right - right_ctx
+            for lc in range(2 ** extra_left):
+                left_prefix = tuple(
+                    (lc >> (extra_left - 1 - j)) & 1
+                    for j in range(extra_left)
+                )
+                for rc in range(2 ** extra_right):
+                    right_suffix = tuple(
+                        (rc >> (extra_right - 1 - j)) & 1
+                        for j in range(extra_right)
+                    )
+                    effective._table[
+                        left_prefix + pattern + right_suffix
+                    ] = output
+        return effective
+
     # ── pattern helpers ───────────────────────────────────────────
 
     def _index_to_pattern(self, index: int) -> tuple[int, ...]:
-        """Convert integer index to pattern tuple (MSB-first)."""
         return tuple(
             (index >> (self.width - 1 - j)) & 1
             for j in range(self.width)
@@ -57,7 +114,6 @@ class Rule:
 
     @property
     def patterns_descending(self) -> list[tuple[int, ...]]:
-        """All patterns from highest to lowest index (Wolfram order)."""
         return [
             self._index_to_pattern(i)
             for i in range(self.n_patterns - 1, -1, -1)
@@ -65,7 +121,6 @@ class Rule:
 
     @property
     def number(self) -> int:
-        """Decimal rule number (output bits read as binary, LSB = pattern 0)."""
         n = 0
         for i in range(self.n_patterns):
             pattern = self._index_to_pattern(i)
@@ -84,7 +139,6 @@ class Rule:
     # ── simulation ────────────────────────────────────────────────
 
     def apply(self, row: np.ndarray) -> np.ndarray:
-        """Compute next row from current row. Wrapping boundary."""
         n = len(row)
         new_row = np.zeros(n, dtype=np.uint8)
         for i in range(n):
@@ -95,10 +149,9 @@ class Rule:
             new_row[i] = self._table.get(pattern, 0)
         return new_row
 
-    # ── composition ───────────────────────────────────────────────
+    # ── expansion (kept for utility) ──────────────────────────────
 
     def expand(self, new_left: int, new_right: int) -> "Rule":
-        """Expand to wider context. Extra cell positions are wildcards."""
         extra_left = new_left - self.left_ctx
         extra_right = new_right - self.right_ctx
         if extra_left < 0 or extra_right < 0:
@@ -107,38 +160,20 @@ class Rule:
             return Rule(
                 left_ctx=new_left, right_ctx=new_right, table=self._table,
             )
-
         new_table: dict[tuple[int, ...], int] = {}
         for pattern, output in self._table.items():
             for lc in range(2 ** extra_left):
-                left_prefix = tuple(
+                lp = tuple(
                     (lc >> (extra_left - 1 - j)) & 1
                     for j in range(extra_left)
                 )
                 for rc in range(2 ** extra_right):
-                    right_suffix = tuple(
+                    rs = tuple(
                         (rc >> (extra_right - 1 - j)) & 1
                         for j in range(extra_right)
                     )
-                    new_table[left_prefix + pattern + right_suffix] = output
+                    new_table[lp + pattern + rs] = output
         return Rule(left_ctx=new_left, right_ctx=new_right, table=new_table)
-
-    @classmethod
-    def compose(cls, rules: list["Rule"]) -> "Rule":
-        """Compose rules via OR: if any rule outputs 1 for a pattern, result is 1."""
-        if not rules:
-            return cls(left_ctx=0, right_ctx=0)
-
-        eff_left = max(r.left_ctx for r in rules)
-        eff_right = max(r.right_ctx for r in rules)
-
-        effective = cls(left_ctx=eff_left, right_ctx=eff_right)
-        for r in rules:
-            expanded = r.expand(eff_left, eff_right)
-            for pattern, output in expanded._table.items():
-                if output == 1:
-                    effective._table[pattern] = 1
-        return effective
 
     def __repr__(self) -> str:
         return f"Rule(L={self.left_ctx}, R={self.right_ctx}, {self.n_patterns}p)"
