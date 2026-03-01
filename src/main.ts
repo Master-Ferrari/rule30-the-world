@@ -16,6 +16,7 @@ const stepsAutoEl = document.getElementById("stepsAuto") as HTMLInputElement;
 const autoUpdateEl = document.getElementById("autoUpdate") as HTMLInputElement;
 const newRandomBtn = document.getElementById("newRandom") as HTMLButtonElement;
 const canvasEl = document.getElementById("canvas") as HTMLCanvasElement;
+const canvasZoomEl = document.getElementById("canvas-zoom") as HTMLDivElement;
 const SCALE_PRESETS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50];
 
 // ── Renderer ─────────────────────────────────────────────────
@@ -95,7 +96,8 @@ function ensureSize(): void {
 }
 
 function applyScale(): void {
-  canvasEl.style.transform = `scale(${currentScale})`;
+  canvasZoomEl.style.transform = `scale(${currentScale})`;
+  canvasZoomEl.style.width = `${currentWidth*currentScale}px`;
 }
 
 function updateNumberInputByStep(input: HTMLInputElement, direction: 1 | -1): void {
@@ -197,7 +199,7 @@ function onUpdate(): void {
   if (errors) parts.push(`${errors} err`);
   infoEl.textContent = parts.join("  |  ");
 
-  simInfoEl.textContent = `${rule.name} | ${currentSteps} steps | ${currentWidth} cells | seed ${currentSeed} | center ${currentSeedBand}px | ${dt}ms`;
+  simInfoEl.textContent = `${dt}ms`;
 }
 
 function requestUpdate(): void {

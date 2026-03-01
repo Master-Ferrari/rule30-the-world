@@ -7,22 +7,18 @@
 </head>
 <body>
   <div id="app">
-    <div id="leftHeader">
-      <p class="help">Format: left(center)right&gt;output (0/1/x) &nbsp; e.g. 1(x)1&gt;1</p>
-      <div id="info"></div>
-    </div>
-    <div id="rightHeader">
-      <label>Width <input type="number" id="width" value="750" min="11" step="10"></label>
-      <label>Scale <input type="number" id="zoom" value="2" min="1" step="1"></label>
-      <label>Seed <input type="number" id="seed" value="5" min="0" step="1"></label>
-      <label>Center <input type="number" id="seedBand" value="25" min="1" step="1"></label>
-      <button id="newRandom" class="controlButton">New Random</button>
-      <span id="stepsAutoGroup">
-        <label>Steps <input type="number" id="steps" value="2000" min="1"></label>
-        <label class="checkboxControl"><input type="checkbox" id="stepsAuto">Auto</label>
-        <label class="checkboxControl"><input type="checkbox" id="autoUpdate" checked>AutoUpdate</label>
-      </span>
+    <div id="header">
+      <!-- <span class="help">left(center)right&gt;output (0/1/x)</span> -->
+      <span id="info"></span>
       <span id="simInfo"></span>
+      <label>width <input type="number" id="width" value="750" min="11" step="10"></label>
+      <label>scale <input type="number" id="zoom" value="2" min="1" step="1"></label>
+      <label>seed <input type="number" id="seed" value="5" min="0" step="1"></label>
+      <label>center <input type="number" id="seedBand" value="25" min="1" step="1"></label>
+      <button id="newRandom" class="controlButton">random seed</button>
+      <label class="checkboxControl"><input type="checkbox" id="autoUpdate" checked>update</label>
+      <label>steps <input type="number" id="steps" value="2000" min="1"></label>
+      <label class="checkboxControl"><input type="checkbox" id="stepsAuto">triangle</label>
     </div>
     <textarea id="rules" spellcheck="false"># creepers
 10(1)01>1
@@ -34,7 +30,9 @@
 </textarea>
     <div id="splitter"></div>
     <div id="canvasWrap">
-      <canvas id="canvas"></canvas>
+      <div id="canvas-zoom">
+        <canvas id="canvas"></canvas>
+      </div>
     </div>
   </div>
 
