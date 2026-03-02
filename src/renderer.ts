@@ -39,6 +39,7 @@ export class Renderer {
   private totalRows = 0;
   private leftCtx = 1;
   private ruleWidth = 3;
+  private initialRowData = new Uint8Array(0);
 
   // Uniform locations (sim)
   private uSimCurrentGen!: WebGLUniformLocation;
@@ -101,6 +102,7 @@ export class Renderer {
 
     // History (width × totalRows)
     this.historyTex = this.createTex(width, this.totalRows);
+    this.initialRowData = new Uint8Array(width);
   }
 
   /** Upload truth table. */
@@ -142,8 +144,9 @@ export class Renderer {
       data[i] = (state & 1) === 1 ? 255 : 0;
     }
     const gl = this.gl;
+    this.initialRowData = data;
     gl.bindTexture(gl.TEXTURE_2D, this.pingPong[0]);
-    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, 1, gl.RED, gl.UNSIGNED_BYTE, data);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, width, 1, gl.RED, gl.UNSIGNED_BYTE, this.initialRowData);
   }
 
   /** Run full simulation: N steps via ping-pong, store in history. */
@@ -152,6 +155,14 @@ export class Renderer {
     const width = this.gridWidth;
     let readIdx = 0;
     let writeIdx = 1;
+
+    // Always restore generation 0 before each full run.
+    gl.bindTexture(gl.TEXTURE_2D, this.pingPong[0]);
+    gl.texSubImage2D(
+      gl.TEXTURE_2D, 0, 0, 0,
+      width, 1,
+      gl.RED, gl.UNSIGNED_BYTE, this.initialRowData,
+    );
 
     // Copy gen 0 into history row 0
     this.copyRowToHistory(this.pingPong[0], 0);

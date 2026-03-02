@@ -118,10 +118,6 @@ html, body {
   -moz-appearance: textfield;
 }
 
-#header input[type="number"]:focus {
-  border-color: var(--border-focus);
-}
-
 #header input[type="number"]:disabled {
   color: var(--text-muted);
 }
@@ -169,10 +165,6 @@ html, body {
   stroke-linejoin: round;
 }
 
-.numberSpinButton:hover {
-  color: var(--text);
-}
-
 .numberSpinButton:active {
   color: var(--accent);
 }
@@ -201,11 +193,6 @@ html, body {
   white-space: nowrap;
 }
 
-.controlButton:hover {
-  background: var(--elevated);
-  border-color: var(--border-focus);
-}
-
 .controlButton:active {
   background: var(--border);
 }
@@ -226,9 +213,16 @@ html, body {
 
 /* ── Content row ─────────────────────── */
 
-#rules {
+#leftPane {
   grid-column: 1;
   grid-row: 2;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  gap: 0;
+}
+
+#rules {
   width: 100%;
   height: 100%;
   font: 13px/1.6 'PT Mono', monospace;
@@ -243,12 +237,50 @@ html, body {
   min-height: 0;
 }
 
-#rules:focus {
-  border-color: var(--border-focus);
-}
-
 #rules::selection {
   background: #264f78;
+}
+
+#errorsPanel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  margin-top: var(--sp);
+  min-height: 56px;
+  max-height: 160px;
+  display: flex;
+  flex-direction: column;
+}
+
+#errorsPanel.hidden {
+  display: none;
+}
+
+#errorsHeader {
+  height: 22px;
+  padding: 0 6px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #d97f7f;
+}
+
+.errorsCloseBtn {
+  all: unset;
+  width: 12px;
+  text-align: center;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+#errorsList {
+  overflow: auto;
+  padding: 6px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #c7a7a7;
+  white-space: pre-wrap;
 }
 
 #canvasWrap {
@@ -261,6 +293,11 @@ html, body {
   min-height: 0;
   display: flex;
   justify-content: center;
+}
+
+#canvasWrap.canvasWrapNoCenter {
+  justify-content: flex-start;
+  align-items: flex-start;
 }
 
 /* Scrollbar styling */
@@ -281,12 +318,13 @@ html, body {
   background: var(--border-focus);
 }
 
-#canvas-zoom {
+#canvas-holder {
   transform-origin: 0 0;
   width: max-content;
 }
 
 #canvas {
+  transform-origin: 50% 0%;
   display: block;
   image-rendering: pixelated;
 }

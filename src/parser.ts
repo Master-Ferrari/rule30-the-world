@@ -16,6 +16,12 @@ export interface ComposedRule {
   name: string;
 }
 
+export interface RuleSyntaxError {
+  line: number;
+  message: string;
+  raw: string;
+}
+
 const LINE_RE = /^([01x]*)\(([01x])\)([01x]*)>([01])$/;
 
 /**
@@ -47,18 +53,24 @@ export function parseRuleLine(raw: string): ParsedEntry[] | null {
 /**
  * Parse all lines, return valid entries + error count.
  */
-export function parseText(text: string): { entries: ParsedEntry[]; errors: number } {
+export function parseText(text: string): { entries: ParsedEntry[]; errors: number; syntaxErrors: RuleSyntaxError[] } {
   const entries: ParsedEntry[] = [];
-  let errors = 0;
-  for (const line of text.split("\n")) {
+  const syntaxErrors: RuleSyntaxError[] = [];
+  const lines = text.split("\n");
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
     try {
       const e = parseRuleLine(line);
       if (e) entries.push(...e);
-    } catch {
-      errors++;
+    } catch (error) {
+      syntaxErrors.push({
+        line: i + 1,
+        message: error instanceof Error ? error.message : "Unknown syntax error",
+        raw: line.trim(),
+      });
     }
   }
-  return { entries, errors };
+  return { entries, errors: syntaxErrors.length, syntaxErrors };
 }
 
 /**

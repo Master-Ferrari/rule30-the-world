@@ -7,6 +7,9 @@ import { Renderer } from "./renderer";
 const rulesEl = document.getElementById("rules") as HTMLTextAreaElement;
 const infoEl = document.getElementById("info")!;
 const simInfoEl = document.getElementById("simInfo")!;
+const errorsPanelEl = document.getElementById("errorsPanel")!;
+const errorsListEl = document.getElementById("errorsList")!;
+const errorsCloseEl = document.getElementById("errorsClose") as HTMLButtonElement;
 const stepsEl = document.getElementById("steps") as HTMLInputElement;
 const widthEl = document.getElementById("width") as HTMLInputElement;
 const zoomEl = document.getElementById("zoom") as HTMLInputElement;
@@ -16,7 +19,8 @@ const stepsAutoEl = document.getElementById("stepsAuto") as HTMLInputElement;
 const autoUpdateEl = document.getElementById("autoUpdate") as HTMLInputElement;
 const newRandomBtn = document.getElementById("newRandom") as HTMLButtonElement;
 const canvasEl = document.getElementById("canvas") as HTMLCanvasElement;
-const canvasZoomEl = document.getElementById("canvas-zoom") as HTMLDivElement;
+const canvasWrapEl = document.getElementById("canvasWrap") as HTMLDivElement;
+// const canvasZoomEl = document.getElementById("canvas-holder") as HTMLDivElement;
 const SCALE_PRESETS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50];
 
 // ── Renderer ─────────────────────────────────────────────────
@@ -31,6 +35,8 @@ let currentSteps = parseInt(stepsEl.value);
 let currentScale = parseInt(zoomEl.value);
 let currentSeed = Number(seedEl.value) || 1;
 let currentSeedBand = Number(seedBandEl.value) || 20;
+let errorsDismissed = false;
+let lastErrorsSignature = "";
 
 function clampToInputRange(input: HTMLInputElement, value: number): number {
   const min = input.min === "" ? -Infinity : Number(input.min);
@@ -96,8 +102,8 @@ function ensureSize(): void {
 }
 
 function applyScale(): void {
-  canvasZoomEl.style.transform = `scale(${currentScale})`;
-  canvasZoomEl.style.width = `${currentWidth*currentScale}px`;
+  canvasEl.style.transform = `scale(${currentScale})`;
+  canvasWrapEl.classList.toggle("canvasWrapNoCenter", currentScale > 1);
 }
 
 function updateNumberInputByStep(input: HTMLInputElement, direction: 1 | -1): void {
@@ -180,7 +186,8 @@ function setupNumberControls(): void {
 // ── Update ───────────────────────────────────────────────────
 
 function onUpdate(): void {
-  const { entries, errors } = parseText(rulesEl.value);
+  const { entries, errors, syntaxErrors } = parseText(rulesEl.value);
+  renderSyntaxErrors(syntaxErrors);
   if (entries.length === 0) {
     infoEl.textContent = errors > 0 ? `${errors} errors` : "no rules";
     return;
@@ -194,12 +201,39 @@ function onUpdate(): void {
   renderer.display();
   const dt = (performance.now() - t0).toFixed(1);
 
-  // Info
-  const parts = [`${entries.length} entries`, rule.name];
-  if (errors) parts.push(`${errors} err`);
-  infoEl.textContent = parts.join("  |  ");
+  const displayRuleName = rule.name.startsWith("rule") ? `rule-${rule.name.slice(4)}` : rule.name;
+  infoEl.textContent = `${displayRuleName} | ${dt}ms`;
+  simInfoEl.textContent = "";
+}
 
-  simInfoEl.textContent = `${dt}ms`;
+function renderSyntaxErrors(
+  syntaxErrors: Array<{ line: number; message: string; raw: string }>
+): void {
+  if (syntaxErrors.length === 0) {
+    errorsPanelEl.classList.add("hidden");
+    errorsListEl.textContent = "";
+    lastErrorsSignature = "";
+    errorsDismissed = false;
+    return;
+  }
+
+  const signature = syntaxErrors.map((e) => `${e.line}:${e.message}:${e.raw}`).join("|");
+  if (signature !== lastErrorsSignature) {
+    errorsDismissed = false;
+    lastErrorsSignature = signature;
+  }
+
+  const list = syntaxErrors.map((e) => {
+    const source = e.raw || e.message;
+    return `syntax error on line ${e.line} : ${source}`;
+  });
+  errorsListEl.textContent = list.join("\n");
+
+  if (errorsDismissed) {
+    errorsPanelEl.classList.add("hidden");
+  } else {
+    errorsPanelEl.classList.remove("hidden");
+  }
 }
 
 function requestUpdate(): void {
@@ -266,6 +300,11 @@ stepsAutoEl.addEventListener("change", () => {
 autoUpdateEl.addEventListener("change", () => {
   if (!autoUpdateEl.checked) return;
   onUpdate();
+});
+
+errorsCloseEl.addEventListener("click", () => {
+  errorsDismissed = true;
+  errorsPanelEl.classList.add("hidden");
 });
 
 // ── Splitter drag ────────────────────────────────────────────

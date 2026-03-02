@@ -11,7 +11,7 @@
       <!-- <span class="help">left(center)right&gt;output (0/1/x)</span> -->
       <span id="info"></span>
       <span id="simInfo"></span>
-      <label>width <input type="number" id="width" value="750" min="11" step="10"></label>
+      <label>width <input type="number" id="width" value="750" min="1" step="1"></label>
       <label>scale <input type="number" id="zoom" value="2" min="1" step="1"></label>
       <label>seed <input type="number" id="seed" value="5" min="0" step="1"></label>
       <label>center <input type="number" id="seedBand" value="25" min="1" step="1"></label>
@@ -20,7 +20,8 @@
       <label>steps <input type="number" id="steps" value="2000" min="1"></label>
       <label class="checkboxControl"><input type="checkbox" id="stepsAuto">triangle</label>
     </div>
-    <textarea id="rules" spellcheck="false"># creepers
+    <div id="leftPane">
+      <textarea id="rules" spellcheck="false"># creepers
 10(1)01>1
 01(1)10>1
 01(0)10>1
@@ -28,9 +29,17 @@
 00(0)10>1
 1(1)1>1
 </textarea>
+      <div id="errorsPanel" class="hidden">
+        <div id="errorsHeader">
+          <span>errors</span>
+          <button id="errorsClose" class="errorsCloseBtn" type="button" aria-label="Hide errors">x</button>
+        </div>
+        <div id="errorsList"></div>
+      </div>
+    </div>
     <div id="splitter"></div>
     <div id="canvasWrap">
-      <div id="canvas-zoom">
+      <div id="canvas-holder">
         <canvas id="canvas"></canvas>
       </div>
     </div>
