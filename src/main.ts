@@ -37,6 +37,7 @@ let currentSeed = Number(seedEl.value) || 1;
 let currentSeedBand = Number(seedBandEl.value) || 20;
 let errorsDismissed = false;
 let lastErrorsSignature = "";
+let lastRuleNameForCopy = "";
 
 function clampToInputRange(input: HTMLInputElement, value: number): number {
   const min = input.min === "" ? -Infinity : Number(input.min);
@@ -190,6 +191,9 @@ function onUpdate(): void {
   renderSyntaxErrors(syntaxErrors);
   if (entries.length === 0) {
     infoEl.textContent = errors > 0 ? `${errors} errors` : "no rules";
+    lastRuleNameForCopy = "";
+    infoEl.classList.remove("infoCopyable");
+    infoEl.removeAttribute("title");
     return;
   }
 
@@ -202,6 +206,9 @@ function onUpdate(): void {
   const dt = (performance.now() - t0).toFixed(1);
 
   const displayRuleName = rule.name.startsWith("rule") ? `rule-${rule.name.slice(4)}` : rule.name;
+  lastRuleNameForCopy = displayRuleName;
+  infoEl.classList.add("infoCopyable");
+  infoEl.title = "click to copy rule name";
   infoEl.textContent = `${displayRuleName} | ${dt}ms`;
   simInfoEl.textContent = "";
 }
@@ -305,6 +312,11 @@ autoUpdateEl.addEventListener("change", () => {
 errorsCloseEl.addEventListener("click", () => {
   errorsDismissed = true;
   errorsPanelEl.classList.add("hidden");
+});
+
+infoEl.addEventListener("click", async () => {
+  if (!lastRuleNameForCopy) return;
+  await navigator.clipboard.writeText(lastRuleNameForCopy);
 });
 
 // ── Splitter drag ────────────────────────────────────────────

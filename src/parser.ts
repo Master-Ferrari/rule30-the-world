@@ -161,9 +161,9 @@ function computeRuleName(entries: ParsedEntry[]): string {
   if (base <= 5) {
     let n = 0;
     for (let i = 0; i < nameTable.length; i++) {
-      if (nameTable[i]) n |= 1 << i;
+      if (nameTable[i]) n += 2 ** i;
     }
-    return `rule${n}base${base}`;
+    return `rule${n}-base-${base}`;
   }
 
   let n = 0n;
@@ -171,10 +171,10 @@ function computeRuleName(entries: ParsedEntry[]): string {
     if (nameTable[i]) n |= 1n << BigInt(i);
   }
   const s = n.toString();
-  if (s.length > 12) {
-    return `rule${s.slice(0, 10)}..base${base}`;
+  if (s.length > 22) {
+    return `rule${s.slice(0, 20)}..-base-${base}`;
   }
-  return `rule${s}base${base}`;
+  return `rule${s}-base-${base}`;
 }
 
 function computeNameBase(entries: ParsedEntry[]): number {
