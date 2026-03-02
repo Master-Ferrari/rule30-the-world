@@ -7,25 +7,26 @@
 </head>
 <body>
   <div id="app">
-    <div id="header">
-      <div id="headerControls">
-        <!-- <span class="help">left(center)right&gt;output (0/1/x)</span> -->
-        <div id="headerButtons">
-          <span id="info"></span>
-          <span>|</span>
-          <span id="simInfo"></span>
-          <button id="importRuleName" class="controlButton">import rule</button>
-          <button id="openWolfram" class="controlButton">on Wolfram</button>
-          <button id="exportPng" class="controlButton">export png</button>
-          <label>width <input type="number" id="width" value="750" min="1" step="1"></label>
-          <label>scale <input type="number" id="zoom" value="1" min="1" step="1"></label>
-          <label>center <input type="number" id="seedBand" value="25" min="1" step="1"></label>
-          <label>seed <input type="number" id="seed" value="5" min="0" step="1"></label>
-          <button id="newRandom" class="controlButton">random seed</button>
-          <label>edge
-            <span class="selectControl">
-              <select id="boundaryMode">
-                <option value="0" selected>0</option>
+    <div id="leftPane">
+      <div id="headerBrand">
+        <a id="headerBrandLink" href="https://rule-the-worlds.master-ferrari.com">rule-the-worlds.master-ferrari.com</a>
+      </div>
+      <div id="controlPanel">
+        <span id="info"></span>
+        <span class="controlSep">|</span>
+        <span id="simInfo"></span>
+        <button id="importRuleName" class="controlButton">import rule</button>
+        <button id="openWolfram" class="controlButton">on Wolfram</button>
+        <button id="exportPng" class="controlButton">export png</button>
+        <label>width <input type="number" id="width" value="750" min="1" step="1"></label>
+        <label>scale <input type="number" id="zoom" value="1" min="1" step="1"></label>
+        <label>center <input type="number" id="seedBand" value="25" min="1" step="1"></label>
+        <label>seed <input type="number" id="seed" value="5" min="0" step="1"></label>
+        <button id="newRandom" class="controlButton">random seed</button>
+        <label>edge
+          <span class="selectControl">
+            <select id="boundaryMode">
+              <option value="0" selected>0</option>
               <option value="1">1</option>
               <option value="wrap">wrap</option>
             </select>
@@ -39,20 +40,15 @@
         <label class="checkboxControl"><input type="checkbox" id="autoUpdate" checked>update</label>
         <label>speed <input type="number" id="playSpeed" value="1" min="1" step="1"></label>
         <button id="playBtn" class="controlButton">play</button>
-        </div>
       </div>
-      <div id="headerBrand">
-        <a id="headerBrandLink" href="https://rule-the-worlds.master-ferrari.com">rule-the-worlds.master-ferrari.com</a>
-      </div>
-    </div>
-    <div id="leftPane">
+      <div id="hSplitter"></div>
       <textarea id="rules" spellcheck="false"># creepers
 10(1)01>1
 01(0)10>1
 01(0)00>1
 00(0)10>1
 #1(x)1>1
-1(1)1>1        
+1(1)1>1
 </textarea>
       <div id="errorsPanel" class="hidden">
         <div id="errorsHeader">

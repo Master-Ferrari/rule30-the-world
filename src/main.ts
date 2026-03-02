@@ -10,7 +10,6 @@ const simInfoEl = document.getElementById("simInfo")!;
 const errorsPanelEl = document.getElementById("errorsPanel")!;
 const errorsListEl = document.getElementById("errorsList")!;
 const errorsCloseEl = document.getElementById("errorsClose") as HTMLButtonElement;
-const headerControlsEl = document.getElementById("headerControls") as HTMLDivElement;
 const stepsEl = document.getElementById("steps") as HTMLInputElement;
 const widthEl = document.getElementById("width") as HTMLInputElement;
 const zoomEl = document.getElementById("zoom") as HTMLInputElement;
@@ -245,6 +244,7 @@ function setupNumberControls(): void {
 
     input.addEventListener("wheel", (event) => {
       event.preventDefault();
+      event.stopPropagation();
       const direction: 1 | -1 = event.deltaY < 0 ? 1 : -1;
       updateNumberInputByStep(input, direction);
       input.dispatchEvent(new Event("input", { bubbles: true }));
@@ -454,6 +454,7 @@ boundaryModeEl.addEventListener("change", () => {
 
 boundaryModeEl.addEventListener("wheel", (event) => {
   event.preventDefault();
+  event.stopPropagation();
   const direction = event.deltaY < 0 ? -1 : 1;
   const nextIndex = Math.max(
     0,
@@ -462,16 +463,6 @@ boundaryModeEl.addEventListener("wheel", (event) => {
   if (nextIndex === boundaryModeEl.selectedIndex) return;
   boundaryModeEl.selectedIndex = nextIndex;
   boundaryModeEl.dispatchEvent(new Event("change", { bubbles: true }));
-}, { passive: false });
-
-headerControlsEl.addEventListener("wheel", (event) => {
-  const target = event.target as HTMLElement | null;
-  if (target?.closest('input[type="number"], select, textarea')) return;
-
-  const delta = event.deltaY !== 0 ? event.deltaY : event.deltaX;
-  if (delta === 0) return;
-  event.preventDefault();
-  headerControlsEl.scrollLeft += delta;
 }, { passive: false });
 
 stepsAutoEl.addEventListener("change", () => {
@@ -510,6 +501,8 @@ infoEl.addEventListener("click", async () => {
 // ── Splitter drag ────────────────────────────────────────────
 
 const splitterEl = document.getElementById("splitter")!;
+const hSplitterEl = document.getElementById("hSplitter")!;
+const controlPanelEl = document.getElementById("controlPanel")!;
 const appEl = document.getElementById("app")!;
 
 splitterEl.addEventListener("mousedown", (e: MouseEvent) => {
@@ -518,11 +511,36 @@ splitterEl.addEventListener("mousedown", (e: MouseEvent) => {
 
   const onMove = (ev: MouseEvent) => {
     const padding = 8; // --sp
-    const minW = 160;
+    const minW = 430;
     const maxW = window.innerWidth * 0.6;
     const w = Math.max(minW, Math.min(maxW, ev.clientX - padding));
     appEl.style.setProperty("--left-w", `${w}px`);
     updateCanvasWrapAlignment();
+  };
+
+  const onUp = () => {
+    appEl.classList.remove("dragging");
+    window.removeEventListener("mousemove", onMove);
+    window.removeEventListener("mouseup", onUp);
+  };
+
+  window.addEventListener("mousemove", onMove);
+  window.addEventListener("mouseup", onUp);
+});
+
+
+hSplitterEl.addEventListener("mousedown", (e: MouseEvent) => {
+  e.preventDefault();
+  appEl.classList.add("dragging");
+
+  const startY = e.clientY;
+  const startH = controlPanelEl.getBoundingClientRect().height;
+
+  const onMove = (ev: MouseEvent) => {
+    const minH = 32;
+    const maxH = window.innerHeight * 0.7;
+    const h = Math.max(minH, Math.min(maxH, startH + (ev.clientY - startY)));
+    appEl.style.setProperty("--controls-h", `${h}px`);
   };
 
   const onUp = () => {

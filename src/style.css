@@ -1,12 +1,3 @@
-/* ── Design system ─────────────────────────
-   Font:    PT Mono
-   Spacing: 8px base unit
-   Colors:  #0a0a0a bg, #141414 surface, #1e1e1e elevated
-            #e0e0e0 text, #666 muted, #333 border
-   Radius:  0
-   Shadows: none
-   ──────────────────────────────────────── */
-
 @import url('https://fonts.googleapis.com/css2?family=PT+Mono&display=swap');
 
 :root {
@@ -19,7 +10,8 @@
   --text: #e0e0e0;
   --text-muted: #666;
   --accent: #888;
-  --left-w: 320px;
+  --left-w: 430px;
+  --controls-h: 300px;
 }
 
 * {
@@ -28,8 +20,7 @@
   box-sizing: border-box;
 }
 
-html,
-body {
+html, body {
   height: 100%;
   overflow: hidden;
   font-family: 'PT Mono', monospace;
@@ -37,354 +28,113 @@ body {
   color: var(--text);
 }
 
-/* ── Grid layout ─────────────────────── */
+/* ── App grid ─────────────────────────── */
 
 #app {
   display: grid;
   grid-template-columns: var(--left-w) var(--sp) 1fr;
-  grid-template-rows: auto 1fr;
-  column-gap: 0;
-  row-gap: var(--sp);
+  grid-template-rows: 1fr;
   height: 100vh;
   padding: var(--sp);
-  padding-top: 0px;
 }
 
-/* ── Header ──────────────────────────── */
+/* ── Left column ─────────────────────── */
 
-#header {
-  grid-column: 1 / -1;
+#leftPane {
+  grid-column: 1;
   grid-row: 1;
   display: flex;
-  /* align-items: center; */
-  font-size: 11px;
-  color: var(--accent);
-  min-width: 0;
-  overflow: visible;
-}
-
-#headerControls {
-  display: flex;
-  align-items: center;
-  gap: 8px calc(var(--sp) * 1.5);
-  min-width: 0;
-  flex: 1 1 auto;
-  overflow-x: auto;
-  overflow-y: visible;
-  white-space: nowrap;
-  padding-top: 2px;
-  transform: rotateX(180deg);
-  position: relative;
-  z-index: 1;
-}
-
-#headerControls>* {
-  transform: rotateX(180deg);
-}
-
-#headerButtons {
-  display: inline-flex;
-  align-items: center;
-  gap: calc(var(--sp));
-  padding-top: 15px;
-  padding-left: 4px;
-}
-
-#headerControls::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-#headerControls::-webkit-scrollbar-track {
-  background: var(--bg);
-}
-
-#headerControls::-webkit-scrollbar-thumb {
-  background: var(--border);
-}
-
-#headerControls::-webkit-scrollbar-thumb:hover {
-  background: var(--border-focus);
+  flex-direction: column;
+  min-height: 0;
 }
 
 #headerBrand {
   flex: 0 0 auto;
-  text-align: right;
   font-size: 20px;
-  line-height: 1;
-  color: var(--text);
+  padding: var(--sp) 0 var(--sp) 0;
   white-space: nowrap;
-  position: relative;
-  /* left: -5px; */
-  top: 14px;
-  z-index: 2;
-  box-shadow: -36px 0 28px 18px var(--bg);
 }
 
 #headerBrandLink {
-  color: inherit;
+  color: var(--text);
   text-decoration: none;
-  white-space: inherit;
 }
 
-.help {
-  font-size: 10px;
-  color: var(--text-muted);
-  letter-spacing: 0.02em;
-}
+/* ── Control panel ───────────────────── */
 
-#info {
-  position: relative;
-  display: inline-block;
-  font-size: 10px;
-  color: var(--text-muted);
-}
-
-#info.infoCopyable {
-  cursor: pointer;
-}
-
-#info.infoCopyable:hover:not(.infoCopied)::after {
-  content: "click to copy rule";
-  position: absolute;
-  left: 0;
-  bottom: calc(100% + 4px);
-  padding: 1px 4px;
-  font-size: 9px;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 20;
-}
-
-#info.infoCopied::after {
-  content: "copied";
-  position: absolute;
-  left: 0;
-  bottom: calc(100% + 4px);
-  padding: 1px 4px;
-  font-size: 9px;
-  color: var(--text);
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  white-space: nowrap;
-  pointer-events: none;
-  z-index: 20;
-}
-
-#header label {
+#controlPanel {
+  flex: 0 0 auto;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: calc(var(--sp) / 2);
-  white-space: nowrap;
-}
-
-.checkboxControl {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.checkboxControl input[type="checkbox"] {
-  width: 11px;
-  height: 11px;
-  appearance: none;
-  -webkit-appearance: none;
-  background: var(--elevated);
-  border: 1px solid var(--border);
-  cursor: pointer;
-}
-
-.checkboxControl input[type="checkbox"]:checked {
-  background: var(--elevated);
-  box-shadow: inset 0 0 0 2px var(--bg), inset 0 0 0 999px var(--accent);
-}
-
-#header input[type="number"] {
-  width: 52px;
-  padding: 4px 16px 4px 6px;
-  font: 11px 'PT Mono', monospace;
-  background: var(--elevated);
-  color: var(--text);
-  border: 1px solid var(--border);
-  border-radius: 0;
-  outline: none;
-  appearance: textfield;
-  -moz-appearance: textfield;
-}
-
-#header select {
-  width: 56px;
-  height: 23px;
-  padding: 2px 18px 2px 4px;
-  font: 11px 'PT Mono', monospace;
-  background: var(--elevated);
-  color: var(--text);
-  border: 1px solid var(--border);
-  outline: none;
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-}
-
-.selectControl {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
-
-.selectArrow {
-  position: absolute;
-  right: 4px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-#header input[type="number"]:disabled {
-  color: var(--text-muted);
-}
-
-#header input[type="number"]::-webkit-outer-spin-button,
-#header input[type="number"]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.numberControl {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
-
-.numberSpinButtons {
-  position: absolute;
-  right: 0px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-}
-
-.numberSpinButton {
-  all: unset;
-  width: 15px;
-  height: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  cursor: pointer;
-}
-
-.numberSpinIcon {
-  width: 9px;
-  height: 5px;
-  display: block;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 1.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.numberSpinButton:active {
+  gap: 4px var(--sp);
+  max-height: var(--controls-h);
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-size: 11px;
   color: var(--accent);
+  padding-bottom: 2px;
 }
 
-.numberControlDisabled .numberSpinButtons {
-  opacity: 0.35;
-  pointer-events: none;
+/* ── Scrollbars (unified) ────────────── */
+
+#controlPanel::-webkit-scrollbar,
+#rules::-webkit-scrollbar,
+#errorsList::-webkit-scrollbar,
+#canvasWrap::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
 }
 
-#seed {
-  width: 88px;
+#controlPanel::-webkit-scrollbar-track,
+#rules::-webkit-scrollbar-track,
+#errorsList::-webkit-scrollbar-track,
+#canvasWrap::-webkit-scrollbar-track {
+  background: var(--bg);
 }
 
-#seedBand {
-  width: 72px;
-}
-
-.controlButton {
-  padding: 4px 12px;
-  font: 11px 'PT Mono', monospace;
-  cursor: pointer;
-  border: 1px solid var(--border);
-  border-radius: 0;
-  background: var(--surface);
-  color: var(--text);
-  white-space: nowrap;
-}
-
-.controlButton:active {
+#controlPanel::-webkit-scrollbar-thumb,
+#rules::-webkit-scrollbar-thumb,
+#errorsList::-webkit-scrollbar-thumb,
+#canvasWrap::-webkit-scrollbar-thumb {
   background: var(--border);
 }
 
-#simInfo {
-  font-size: 10px;
-  color: var(--text-muted);
-  white-space: nowrap;
+#canvasWrap::-webkit-scrollbar-corner {
+  background: var(--bg);
 }
 
-/* ── Splitter ────────────────────────── */
+/* ── Horizontal splitter ─────────────── */
 
-#splitter {
-  grid-column: 2;
-  grid-row: 2;
-  cursor: col-resize;
+#hSplitter {
+  flex: 0 0 var(--sp);
+  cursor: row-resize;
 }
 
-/* ── Content row ─────────────────────── */
-
-#leftPane {
-  grid-column: 1;
-  grid-row: 2;
-  min-height: 0;
-  display: grid;
-  grid-template-rows: 1fr auto;
-  gap: 0;
-}
+/* ── Rules textarea ──────────────────── */
 
 #rules {
+  flex: 1 1 0;
   width: 100%;
-  height: 100%;
+  min-height: 0;
   font: 13px/1.6 'PT Mono', monospace;
   background: var(--elevated);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 0;
   padding: var(--sp);
   resize: none;
   outline: none;
   tab-size: 4;
-  min-height: 0;
 }
 
 #rules::selection {
   background: #264f78;
 }
 
-#rules::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-#rules::-webkit-scrollbar-track {
-  background: var(--bg);
-}
-
-#rules::-webkit-scrollbar-thumb {
-  background: var(--border);
-}
-
-#rules::-webkit-scrollbar-thumb:hover {
-  background: var(--border-focus);
-}
+/* ── Errors panel ────────────────────── */
 
 #errorsPanel {
+  flex: 0 0 auto;
   background: var(--surface);
   border: 1px solid var(--border);
   margin-top: var(--sp);
@@ -426,14 +176,22 @@ body {
   white-space: pre-wrap;
 }
 
+/* ── Vertical splitter ───────────────── */
+
+#splitter {
+  grid-column: 2;
+  grid-row: 1;
+  cursor: col-resize;
+}
+
+/* ── Canvas area ─────────────────────── */
+
 #canvasWrap {
-  z-index: 100;
   grid-column: 3;
-  grid-row: 2;
+  grid-row: 1;
   overflow: auto;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 0;
   min-height: 0;
   display: grid;
   justify-items: start;
@@ -444,27 +202,6 @@ body {
   justify-items: center;
 }
 
-/* Scrollbar styling */
-#canvasWrap::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-#canvasWrap::-webkit-scrollbar-corner {
-  background: var(--bg);
-}
-
-#canvasWrap::-webkit-scrollbar-track {
-  background: var(--bg);
-}
-
-#canvasWrap::-webkit-scrollbar-thumb {
-  background: var(--border);
-}
-
-#canvasWrap::-webkit-scrollbar-thumb:hover {
-  background: var(--border-focus);
-}
 
 #canvas-holder {
   transform-origin: 0 0;
@@ -475,6 +212,212 @@ body {
   transform-origin: 50% 0%;
   display: block;
   image-rendering: pixelated;
+}
+
+/* ── Controls: labels ────────────────── */
+
+#controlPanel label {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--sp) / 2);
+  white-space: nowrap;
+}
+
+.checkboxControl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.checkboxControl input[type="checkbox"] {
+  width: 11px;
+  height: 11px;
+  appearance: none;
+  -webkit-appearance: none;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.checkboxControl input[type="checkbox"]:checked {
+  background: var(--elevated);
+  box-shadow: inset 0 0 0 2px var(--bg), inset 0 0 0 999px var(--accent);
+}
+
+/* ── Controls: number inputs ─────────── */
+
+#controlPanel input[type="number"] {
+  width: 52px;
+  padding: 4px 16px 4px 6px;
+  font: 11px 'PT Mono', monospace;
+  background: var(--elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+  outline: none;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+#controlPanel input[type="number"]:disabled {
+  color: var(--text-muted);
+}
+
+#controlPanel input[type="number"]::-webkit-outer-spin-button,
+#controlPanel input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+#seed  { width: 88px; }
+#seedBand { width: 72px; }
+
+/* ── Controls: select ────────────────── */
+
+#controlPanel select {
+  width: 56px;
+  height: 23px;
+  padding: 2px 18px 2px 4px;
+  font: 11px 'PT Mono', monospace;
+  background: var(--elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.selectControl {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.selectArrow {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+/* ── Controls: buttons ───────────────── */
+
+.controlButton {
+  padding: 4px 10px;
+  font: 11px 'PT Mono', monospace;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.controlButton:active {
+  background: var(--border);
+}
+
+/* ── Controls: number spinners ───────── */
+
+.numberControl {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.numberSpinButtons {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+}
+
+.numberSpinButton {
+  all: unset;
+  width: 15px;
+  height: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.numberSpinButton:active {
+  color: var(--accent);
+}
+
+.numberSpinIcon {
+  width: 9px;
+  height: 5px;
+  display: block;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.numberControlDisabled .numberSpinButtons {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+/* ── Info / copy tooltip ─────────────── */
+
+#info {
+  position: relative;
+  display: inline-block;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+#info.infoCopyable {
+  cursor: pointer;
+}
+
+#info.infoCopyable:hover:not(.infoCopied)::after {
+  content: "click to copy rule";
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  padding: 1px 4px;
+  font-size: 9px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 20;
+}
+
+#info.infoCopied::after {
+  content: "copied";
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  padding: 1px 4px;
+  font-size: 9px;
+  color: var(--text);
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 20;
+}
+
+#simInfo {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.controlSep {
+  color: var(--border);
 }
 
 /* ── Drag state ──────────────────────── */
