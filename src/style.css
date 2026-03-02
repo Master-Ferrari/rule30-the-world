@@ -28,7 +28,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   overflow: hidden;
   font-family: 'PT Mono', monospace;
@@ -59,6 +60,7 @@ html, body {
   font-size: 11px;
   color: var(--accent);
   min-width: 0;
+  overflow: visible;
 }
 
 #headerControls {
@@ -68,13 +70,15 @@ html, body {
   min-width: 0;
   flex: 1 1 auto;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: visible;
   white-space: nowrap;
   padding-top: 2px;
   transform: rotateX(180deg);
+  position: relative;
+  z-index: 1;
 }
 
-#headerControls > * {
+#headerControls>* {
   transform: rotateX(180deg);
 }
 
@@ -83,6 +87,7 @@ html, body {
   align-items: center;
   gap: calc(var(--sp));
   padding-top: 15px;
+  padding-left: 4px;
 }
 
 #headerControls::-webkit-scrollbar {
@@ -143,7 +148,7 @@ html, body {
   content: "click to copy rule";
   position: absolute;
   left: 0;
-  top: calc(100% + 4px);
+  bottom: calc(100% + 4px);
   padding: 1px 4px;
   font-size: 9px;
   color: var(--text);
@@ -151,13 +156,14 @@ html, body {
   border: 1px solid var(--border);
   white-space: nowrap;
   pointer-events: none;
+  z-index: 20;
 }
 
 #info.infoCopied::after {
   content: "copied";
   position: absolute;
   left: 0;
-  top: calc(100% + 4px);
+  bottom: calc(100% + 4px);
   padding: 1px 4px;
   font-size: 9px;
   color: var(--text);
@@ -165,6 +171,7 @@ html, body {
   border: 1px solid var(--border);
   white-space: nowrap;
   pointer-events: none;
+  z-index: 20;
 }
 
 #header label {
@@ -211,12 +218,30 @@ html, body {
 #header select {
   width: 56px;
   height: 23px;
-  padding: 2px 4px;
+  padding: 2px 18px 2px 4px;
   font: 11px 'PT Mono', monospace;
   background: var(--elevated);
   color: var(--text);
   border: 1px solid var(--border);
   outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+.selectControl {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.selectArrow {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
 }
 
 #header input[type="number"]:disabled {
@@ -423,6 +448,10 @@ html, body {
 #canvasWrap::-webkit-scrollbar {
   width: 6px;
   height: 6px;
+}
+
+#canvasWrap::-webkit-scrollbar-corner {
+  background: var(--bg);
 }
 
 #canvasWrap::-webkit-scrollbar-track {
