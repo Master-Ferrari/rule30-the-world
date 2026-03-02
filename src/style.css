@@ -11,11 +11,11 @@
 
 :root {
   --sp: 8px;
-  --bg: #0a0a0a;
-  --surface: #141414;
-  --elevated: #1e1e1e;
+  --bg: #141414;
+  --surface: #000;
+  --elevated: #000;
   --border: #272727;
-  --border-focus: #444;
+  --border-focus: #272727;
   --text: #e0e0e0;
   --text-muted: #666;
   --accent: #888;
@@ -46,6 +46,7 @@ html, body {
   row-gap: var(--sp);
   height: 100vh;
   padding: var(--sp);
+  padding-top: 0px;
 }
 
 /* ── Header ──────────────────────────── */
@@ -54,12 +55,71 @@ html, body {
   grid-column: 1 / -1;
   grid-row: 1;
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px calc(var(--sp) * 1.5);
+  /* align-items: center; */
   font-size: 11px;
   color: var(--accent);
   min-width: 0;
+}
+
+#headerControls {
+  display: flex;
+  align-items: center;
+  gap: 8px calc(var(--sp) * 1.5);
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  padding-top: 2px;
+  transform: rotateX(180deg);
+}
+
+#headerControls > * {
+  transform: rotateX(180deg);
+}
+
+#headerButtons {
+  display: inline-flex;
+  align-items: center;
+  gap: calc(var(--sp));
+  padding-top: 15px;
+}
+
+#headerControls::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+#headerControls::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+#headerControls::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+#headerControls::-webkit-scrollbar-thumb:hover {
+  background: var(--border-focus);
+}
+
+#headerBrand {
+  flex: 0 0 auto;
+  text-align: right;
+  font-size: 20px;
+  line-height: 1;
+  color: var(--text);
+  white-space: nowrap;
+  position: relative;
+  /* left: -5px; */
+  top: 14px;
+  z-index: 2;
+  box-shadow: -36px 0 28px 18px var(--bg);
+}
+
+#headerBrandLink {
+  color: inherit;
+  text-decoration: none;
+  white-space: inherit;
 }
 
 .help {
@@ -101,7 +161,7 @@ html, body {
   padding: 1px 4px;
   font-size: 9px;
   color: var(--text);
-  background: var(--surface);
+  background: var(--elevated);
   border: 1px solid var(--border);
   white-space: nowrap;
   pointer-events: none;
@@ -117,7 +177,7 @@ html, body {
 .checkboxControl {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 8px;
 }
 
 .checkboxControl input[type="checkbox"] {
@@ -128,10 +188,6 @@ html, body {
   background: var(--elevated);
   border: 1px solid var(--border);
   cursor: pointer;
-}
-
-.checkboxControl input[type="checkbox"]:hover {
-  border-color: var(--border-focus);
 }
 
 .checkboxControl input[type="checkbox"]:checked {
@@ -286,6 +342,23 @@ html, body {
   background: #264f78;
 }
 
+#rules::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+#rules::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+#rules::-webkit-scrollbar-thumb {
+  background: var(--border);
+}
+
+#rules::-webkit-scrollbar-thumb:hover {
+  background: var(--border-focus);
+}
+
 #errorsPanel {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -329,6 +402,7 @@ html, body {
 }
 
 #canvasWrap {
+  z-index: 100;
   grid-column: 3;
   grid-row: 2;
   overflow: auto;
@@ -336,13 +410,13 @@ html, body {
   border: 1px solid var(--border);
   border-radius: 0;
   min-height: 0;
-  display: flex;
-  justify-content: center;
+  display: grid;
+  justify-items: start;
+  align-items: start;
 }
 
-#canvasWrap.canvasWrapNoCenter {
-  justify-content: flex-start;
-  align-items: flex-start;
+#canvasWrap.canvasWrapCentered {
+  justify-items: center;
 }
 
 /* Scrollbar styling */

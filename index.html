@@ -3,32 +3,39 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Rule Predictor — Cellular Automaton</title>
+  <title>RULE THE WORLDS</title>
 </head>
 <body>
   <div id="app">
     <div id="header">
-      <!-- <span class="help">left(center)right&gt;output (0/1/x)</span> -->
-      <span id="info"></span>
-      <span>|</span>
-      <span id="simInfo"></span>
-      <button id="importRuleName" class="controlButton">import rule</button>
-      <label>width <input type="number" id="width" value="750" min="1" step="1"></label>
-      <label>scale <input type="number" id="zoom" value="1" min="1" step="1"></label>
-      <label>center <input type="number" id="seedBand" value="25" min="1" step="1"></label>
-      <label>seed <input type="number" id="seed" value="5" min="0" step="1"></label>
-      <label>edge
-        <select id="boundaryMode">
-          <option value="0" selected>0</option>
-          <option value="1">1</option>
-          <option value="wrap">wrap</option>
-        </select>
-      </label>
-      <button id="newRandom" class="controlButton">random seed</button>
-      <label>steps <input type="number" id="steps" value="2000" min="1"></label>
-      <label class="checkboxControl"><input type="checkbox" id="stepsAuto">triangle</label>
-      <label class="checkboxControl"><input type="checkbox" id="autoUpdate" checked>update</label>
-      <button id="exportPng" class="controlButton">export png</button>
+      <div id="headerControls">
+        <!-- <span class="help">left(center)right&gt;output (0/1/x)</span> -->
+        <div id="headerButtons">
+          <span id="info"></span>
+          <span>|</span>
+          <span id="simInfo"></span>
+          <button id="importRuleName" class="controlButton">import rule</button>
+          <button id="newRandom" class="controlButton">random seed</button>
+          <button id="exportPng" class="controlButton">export png</button>
+          <label>width <input type="number" id="width" value="750" min="1" step="1"></label>
+          <label>scale <input type="number" id="zoom" value="1" min="1" step="1"></label>
+          <label>center <input type="number" id="seedBand" value="25" min="1" step="1"></label>
+          <label>seed <input type="number" id="seed" value="5" min="0" step="1"></label>
+          <label>edge
+            <select id="boundaryMode">
+              <option value="0" selected>0</option>
+              <option value="1">1</option>
+              <option value="wrap">wrap</option>
+            </select>
+          </label>
+          <label>steps <input type="number" id="steps" value="2000" min="1"></label>
+          <label class="checkboxControl"><input type="checkbox" id="stepsAuto">triangle</label>
+          <label class="checkboxControl"><input type="checkbox" id="autoUpdate" checked>update</label>
+        </div>
+      </div>
+      <div id="headerBrand">
+        <a id="headerBrandLink" href="https://rule-the-worlds.master-ferrari.com">rule-the-worlds.master-ferrari.com</a>
+      </div>
     </div>
     <div id="leftPane">
       <textarea id="rules" spellcheck="false"># creepers

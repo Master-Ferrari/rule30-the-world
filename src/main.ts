@@ -10,6 +10,7 @@ const simInfoEl = document.getElementById("simInfo")!;
 const errorsPanelEl = document.getElementById("errorsPanel")!;
 const errorsListEl = document.getElementById("errorsList")!;
 const errorsCloseEl = document.getElementById("errorsClose") as HTMLButtonElement;
+const headerControlsEl = document.getElementById("headerControls") as HTMLDivElement;
 const stepsEl = document.getElementById("steps") as HTMLInputElement;
 const widthEl = document.getElementById("width") as HTMLInputElement;
 const zoomEl = document.getElementById("zoom") as HTMLInputElement;
@@ -22,6 +23,7 @@ const newRandomBtn = document.getElementById("newRandom") as HTMLButtonElement;
 const importRuleNameBtn = document.getElementById("importRuleName") as HTMLButtonElement;
 const exportPngBtn = document.getElementById("exportPng") as HTMLButtonElement;
 const canvasEl = document.getElementById("canvas") as HTMLCanvasElement;
+const canvasWrapEl = document.getElementById("canvasWrap") as HTMLDivElement;
 // const canvasZoomEl = document.getElementById("canvas-holder") as HTMLDivElement;
 const SCALE_PRESETS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50];
 
@@ -146,7 +148,15 @@ function ensureSize(): void {
 }
 
 function applyScale(): void {
-  canvasEl.style.transform = `scale(${currentScale})`;
+  canvasEl.style.transform = "";
+  canvasEl.style.setProperty("zoom", String(currentScale));
+  updateCanvasWrapAlignment();
+}
+
+function updateCanvasWrapAlignment(): void {
+  const renderedWidth = currentWidth * currentScale;
+  const wrapWidth = canvasWrapEl.clientWidth;
+  canvasWrapEl.classList.toggle("canvasWrapCentered", renderedWidth < wrapWidth);
 }
 
 function updateNumberInputByStep(input: HTMLInputElement, direction: 1 | -1): void {
@@ -377,6 +387,16 @@ boundaryModeEl.addEventListener("wheel", (event) => {
   boundaryModeEl.dispatchEvent(new Event("change", { bubbles: true }));
 }, { passive: false });
 
+headerControlsEl.addEventListener("wheel", (event) => {
+  const target = event.target as HTMLElement | null;
+  if (target?.closest('input[type="number"], select, textarea')) return;
+
+  const delta = event.deltaY !== 0 ? event.deltaY : event.deltaX;
+  if (delta === 0) return;
+  event.preventDefault();
+  headerControlsEl.scrollLeft += delta;
+}, { passive: false });
+
 stepsAutoEl.addEventListener("change", () => {
   applyStepsAutoMode();
   ensureSize();
@@ -425,6 +445,7 @@ splitterEl.addEventListener("mousedown", (e: MouseEvent) => {
     const maxW = window.innerWidth * 0.6;
     const w = Math.max(minW, Math.min(maxW, ev.clientX - padding));
     appEl.style.setProperty("--left-w", `${w}px`);
+    updateCanvasWrapAlignment();
   };
 
   const onUp = () => {
@@ -436,6 +457,8 @@ splitterEl.addEventListener("mousedown", (e: MouseEvent) => {
   window.addEventListener("mousemove", onMove);
   window.addEventListener("mouseup", onUp);
 });
+
+window.addEventListener("resize", updateCanvasWrapAlignment);
 
 // ── Init ─────────────────────────────────────────────────────
 
