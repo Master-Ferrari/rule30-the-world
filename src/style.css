@@ -20,7 +20,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   overflow: hidden;
   font-family: 'PT Mono', monospace;
@@ -46,6 +47,7 @@ html, body {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  align-items: center;
 }
 
 #headerBrand {
@@ -60,13 +62,27 @@ html, body {
   text-decoration: none;
 }
 
-/* ── Control panel ───────────────────── */
+/* ── Control line ───────────────────── */
 
-#controlPanel {
+
+
+.controlLine {
+
   flex: 0 0 auto;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  gap: 8px;
+
+}
+
+
+/* ── Control panel ───────────────────── */
+
+#controlPanel {
+  flex-wrap: nowrap;
+  flex: 0 0 auto;
+  display: flex;
   gap: 4px var(--sp);
   max-height: var(--controls-h);
   overflow-y: auto;
@@ -74,6 +90,8 @@ html, body {
   font-size: 11px;
   color: var(--accent);
   padding-bottom: 2px;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* ── Scrollbars (unified) ────────────── */
@@ -269,8 +287,13 @@ html, body {
   margin: 0;
 }
 
-#seed  { width: 88px; }
-#seedBand { width: 72px; }
+#seed {
+  width: 88px;
+}
+
+#seedBand {
+  width: 72px;
+}
 
 /* ── Controls: select ────────────────── */
 

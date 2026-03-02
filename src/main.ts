@@ -48,7 +48,7 @@ let lastRuleNameForCopy = "";
 let copyTooltipTimer: number | null = null;
 let streamAnimId: number | null = null;
 let isPlaying = false;
-let currentSpeed = 1;
+let currentSpeed = 10;
 
 function importRulesFromName(ruleNameRaw: string): string[] | null {
   const normalized = ruleNameRaw.trim().toLowerCase();
@@ -242,16 +242,32 @@ function setupNumberControls(): void {
       input.dispatchEvent(new Event("input", { bubbles: true }));
     });
 
-    input.addEventListener("wheel", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const direction: 1 | -1 = event.deltaY < 0 ? 1 : -1;
-      updateNumberInputByStep(input, direction);
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-    }, { passive: false });
-
     spinWrap.append(upBtn, downBtn);
     wrapper.appendChild(spinWrap);
+  }
+}
+
+function setupWheelScrolling(): void {
+  const numberInputs = [stepsEl, widthEl, zoomEl, seedEl, seedBandEl, playSpeedEl];
+  for (const input of numberInputs) {
+    input.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const dir: 1 | -1 = e.deltaY < 0 ? 1 : -1;
+      updateNumberInputByStep(input, dir);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    }, { passive: false });
+  }
+
+  const selects = [boundaryModeEl];
+  for (const select of selects) {
+    select.addEventListener("wheel", (e) => {
+      e.preventDefault();
+      const dir = e.deltaY < 0 ? -1 : 1;
+      const next = Math.max(0, Math.min(select.options.length - 1, select.selectedIndex + dir));
+      if (next === select.selectedIndex) return;
+      select.selectedIndex = next;
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    }, { passive: false });
   }
 }
 
@@ -452,19 +468,6 @@ boundaryModeEl.addEventListener("change", () => {
   requestUpdate();
 });
 
-boundaryModeEl.addEventListener("wheel", (event) => {
-  event.preventDefault();
-  event.stopPropagation();
-  const direction = event.deltaY < 0 ? -1 : 1;
-  const nextIndex = Math.max(
-    0,
-    Math.min(boundaryModeEl.options.length - 1, boundaryModeEl.selectedIndex + direction)
-  );
-  if (nextIndex === boundaryModeEl.selectedIndex) return;
-  boundaryModeEl.selectedIndex = nextIndex;
-  boundaryModeEl.dispatchEvent(new Event("change", { bubbles: true }));
-}, { passive: false });
-
 stepsAutoEl.addEventListener("change", () => {
   applyStepsAutoMode();
   ensureSize();
@@ -558,6 +561,7 @@ window.addEventListener("resize", updateCanvasWrapAlignment);
 // ── Init ─────────────────────────────────────────────────────
 
 setupNumberControls();
+setupWheelScrolling();
 setSeed(Number(seedEl.value) || 1);
 setSeedBand(Number(seedBandEl.value) || 20);
 setBoundaryMode(boundaryModeEl.value);
