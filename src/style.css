@@ -457,3 +457,46 @@ body {
   display: flex;
   gap: 18px;
 }
+
+/* ── Portrait / mobile layout ────────── */
+
+@media (orientation: portrait) {
+  html, body {
+    overflow: auto;
+  }
+
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  #leftPane {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+
+  #controlPanel {
+    max-height: none;
+    width: 100%;
+  }
+
+  #hSplitter {
+    display: none;
+  }
+
+  #rules {
+    flex: 0 0 450px;
+    height: 450px;
+  }
+
+  #splitter {
+    display: none;
+  }
+
+  #canvasWrap {
+    min-height: 800px;
+    margin-top: var(--sp);
+  }
+}
