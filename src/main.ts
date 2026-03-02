@@ -22,6 +22,7 @@ const autoUpdateEl = document.getElementById("autoUpdate") as HTMLInputElement;
 const newRandomBtn = document.getElementById("newRandom") as HTMLButtonElement;
 const importRuleNameBtn = document.getElementById("importRuleName") as HTMLButtonElement;
 const exportPngBtn = document.getElementById("exportPng") as HTMLButtonElement;
+const openWolframBtn = document.getElementById("openWolfram") as HTMLButtonElement;
 const canvasEl = document.getElementById("canvas") as HTMLCanvasElement;
 const canvasWrapEl = document.getElementById("canvasWrap") as HTMLDivElement;
 // const canvasZoomEl = document.getElementById("canvas-holder") as HTMLDivElement;
@@ -47,12 +48,23 @@ let copyTooltipTimer: number | null = null;
 
 function importRulesFromName(ruleNameRaw: string): string[] | null {
   const normalized = ruleNameRaw.trim().toLowerCase();
-  const match = normalized.match(/^rule-(\d+)-base-(\d+)$/)
+  const radiusMatch = normalized.match(/^rule\s+(\d+)\s+radius\s+(\d+)$/);
+  const legacyMatch = normalized.match(/^rule-(\d+)-base-(\d+)$/)
     || normalized.match(/^rule(\d+)base(\d+)$/);
-  if (!match) return null;
 
-  const value = BigInt(match[1]);
-  const base = Number(match[2]);
+  let value: bigint;
+  let base: number;
+
+  if (radiusMatch) {
+    value = BigInt(radiusMatch[1]);
+    const radius = Number(radiusMatch[2]);
+    base = radius * 2 + 1;
+  } else if (legacyMatch) {
+    value = BigInt(legacyMatch[1]);
+    base = Number(legacyMatch[2]);
+  } else {
+    return null;
+  }
   if (!Number.isFinite(base) || base < 1 || base % 2 === 0) return null;
   if (base > 12) return null;
 
@@ -308,7 +320,7 @@ newRandomBtn.addEventListener("click", () => {
 });
 
 importRuleNameBtn.addEventListener("click", () => {
-  const raw = window.prompt("paste rule name like: rule-30-base-3", lastRuleNameForCopy || "");
+  const raw = window.prompt("paste rule name like: rule 30 radius 1", lastRuleNameForCopy || "");
   if (!raw) return;
 
   const importedLines = importRulesFromName(raw);
@@ -331,6 +343,13 @@ exportPngBtn.addEventListener("click", () => {
   link.href = dataUrl;
   link.download = `${fileBase}_${timestamp}.png`;
   link.click();
+});
+
+openWolframBtn.addEventListener("click", () => {
+  const m = lastRuleNameForCopy.match(/^rule\s+(\d+)\s+radius\s+(\d+)$/);
+  if (!m) return;
+  const url = `https://www.wolframalpha.com/input?i=radius+${m[2]}+rule+${m[1]}`;
+  window.open(url, "_blank");
 });
 
 stepsEl.addEventListener("input", () => {
