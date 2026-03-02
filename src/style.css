@@ -480,6 +480,7 @@ body {
   #controlPanel {
     max-height: none;
     width: 100%;
+    margin-bottom: var(--sp);
   }
 
   #hSplitter {

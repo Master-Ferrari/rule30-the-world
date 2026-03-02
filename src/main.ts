@@ -573,6 +573,12 @@ window.addEventListener("resize", updateCanvasWrapAlignment);
 
 // ── Init ─────────────────────────────────────────────────────
 
+if (window.matchMedia("(orientation: portrait)").matches) {
+  currentWidth = 420;
+  widthEl.value = "420";
+  zoomEl.value = "1";
+}
+
 setupNumberControls();
 setupWheelScrolling();
 setSeed(Number(seedEl.value) || 1);
