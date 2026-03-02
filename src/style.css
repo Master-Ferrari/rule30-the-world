@@ -69,12 +69,42 @@ html, body {
 }
 
 #info {
+  position: relative;
+  display: inline-block;
   font-size: 10px;
   color: var(--text-muted);
 }
 
 #info.infoCopyable {
   cursor: pointer;
+}
+
+#info.infoCopyable:hover:not(.infoCopied)::after {
+  content: "click to copy rule";
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  padding: 1px 4px;
+  font-size: 9px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+#info.infoCopied::after {
+  content: "copied";
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  padding: 1px 4px;
+  font-size: 9px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 #header label {
@@ -120,6 +150,17 @@ html, body {
   outline: none;
   appearance: textfield;
   -moz-appearance: textfield;
+}
+
+#header select {
+  width: 56px;
+  height: 23px;
+  padding: 2px 4px;
+  font: 11px 'PT Mono', monospace;
+  background: var(--elevated);
+  color: var(--text);
+  border: 1px solid var(--border);
+  outline: none;
 }
 
 #header input[type="number"]:disabled {

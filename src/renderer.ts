@@ -47,6 +47,7 @@ export class Renderer {
   private uSimWidth!: WebGLUniformLocation;
   private uSimLeftCtx!: WebGLUniformLocation;
   private uSimRuleWidth!: WebGLUniformLocation;
+  private uSimBoundaryMode!: WebGLUniformLocation;
 
   // Uniform locations (display)
   private uDispHistory!: WebGLUniformLocation;
@@ -72,6 +73,7 @@ export class Renderer {
     this.uSimWidth = gl.getUniformLocation(this.simProgram, "u_width")!;
     this.uSimLeftCtx = gl.getUniformLocation(this.simProgram, "u_leftCtx")!;
     this.uSimRuleWidth = gl.getUniformLocation(this.simProgram, "u_ruleWidth")!;
+    this.uSimBoundaryMode = gl.getUniformLocation(this.simProgram, "u_boundaryMode")!;
 
     // Display uniforms
     this.uDispHistory = gl.getUniformLocation(this.displayProgram, "u_history")!;
@@ -150,7 +152,7 @@ export class Renderer {
   }
 
   /** Run full simulation: N steps via ping-pong, store in history. */
-  simulate(steps: number): void {
+  simulate(steps: number, boundaryMode: number): void {
     const gl = this.gl;
     const width = this.gridWidth;
     let readIdx = 0;
@@ -174,6 +176,7 @@ export class Renderer {
     gl.uniform1i(this.uSimWidth, width);
     gl.uniform1i(this.uSimLeftCtx, this.leftCtx);
     gl.uniform1i(this.uSimRuleWidth, this.ruleWidth);
+    gl.uniform1i(this.uSimBoundaryMode, boundaryMode);
 
     // Bind truth table to texture unit 1
     gl.activeTexture(gl.TEXTURE1);

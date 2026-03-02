@@ -15,11 +15,13 @@ const widthEl = document.getElementById("width") as HTMLInputElement;
 const zoomEl = document.getElementById("zoom") as HTMLInputElement;
 const seedEl = document.getElementById("seed") as HTMLInputElement;
 const seedBandEl = document.getElementById("seedBand") as HTMLInputElement;
+const boundaryModeEl = document.getElementById("boundaryMode") as HTMLSelectElement;
 const stepsAutoEl = document.getElementById("stepsAuto") as HTMLInputElement;
 const autoUpdateEl = document.getElementById("autoUpdate") as HTMLInputElement;
 const newRandomBtn = document.getElementById("newRandom") as HTMLButtonElement;
+const importRuleNameBtn = document.getElementById("importRuleName") as HTMLButtonElement;
+const exportPngBtn = document.getElementById("exportPng") as HTMLButtonElement;
 const canvasEl = document.getElementById("canvas") as HTMLCanvasElement;
-const canvasWrapEl = document.getElementById("canvasWrap") as HTMLDivElement;
 // const canvasZoomEl = document.getElementById("canvas-holder") as HTMLDivElement;
 const SCALE_PRESETS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 40, 50];
 
@@ -35,9 +37,47 @@ let currentSteps = parseInt(stepsEl.value);
 let currentScale = parseInt(zoomEl.value);
 let currentSeed = Number(seedEl.value) || 1;
 let currentSeedBand = Number(seedBandEl.value) || 20;
+let currentBoundaryMode: 0 | 1 | 2 = 0;
 let errorsDismissed = false;
 let lastErrorsSignature = "";
 let lastRuleNameForCopy = "";
+let copyTooltipTimer: number | null = null;
+
+function importRulesFromName(ruleNameRaw: string): string[] | null {
+  const normalized = ruleNameRaw.trim().toLowerCase();
+  const match = normalized.match(/^rule-(\d+)-base-(\d+)$/)
+    || normalized.match(/^rule(\d+)base(\d+)$/);
+  if (!match) return null;
+
+  const value = BigInt(match[1]);
+  const base = Number(match[2]);
+  if (!Number.isFinite(base) || base < 1 || base % 2 === 0) return null;
+  if (base > 12) return null;
+
+  const totalPatterns = 1n << BigInt(base);
+  const maxRuleValue = (1n << totalPatterns) - 1n;
+  if (value > maxRuleValue) return null;
+
+  const leftCtx = (base - 1) / 2;
+  const lines: string[] = [];
+
+  for (let idx = 0n; idx < totalPatterns; idx++) {
+    if (((value >> idx) & 1n) === 0n) continue;
+
+    const bits: number[] = [];
+    for (let pos = 0; pos < base; pos++) {
+      const shift = BigInt(base - 1 - pos);
+      bits.push(Number((idx >> shift) & 1n));
+    }
+
+    const left = bits.slice(0, leftCtx).join("");
+    const center = String(bits[leftCtx]);
+    const right = bits.slice(leftCtx + 1).join("");
+    lines.push(`${left}(${center})${right}>1`);
+  }
+
+  return lines;
+}
 
 function clampToInputRange(input: HTMLInputElement, value: number): number {
   const min = input.min === "" ? -Infinity : Number(input.min);
@@ -84,19 +124,22 @@ function setSeedBand(nextValue: number): void {
   seedBandEl.value = String(currentSeedBand);
 }
 
+function setBoundaryMode(value: string): void {
+  if (value === "1") currentBoundaryMode = 1;
+  else if (value === "wrap") currentBoundaryMode = 2;
+  else currentBoundaryMode = 0;
+}
+
 function computeAutoSteps(): number {
   return Math.max(1, Math.floor((currentWidth - currentSeedBand) / 2));
 }
 
-function syncAutoSteps(): void {
-  if (!stepsAutoEl.checked) return;
-  currentSteps = computeAutoSteps();
-  stepsEl.value = String(currentSteps);
+function getEffectiveSteps(): number {
+  return stepsAutoEl.checked ? computeAutoSteps() : currentSteps;
 }
 
 function ensureSize(): void {
-  syncAutoSteps();
-  renderer.resize(currentWidth, currentSteps);
+  renderer.resize(currentWidth, getEffectiveSteps());
   setSeedBand(currentSeedBand);
   renderer.randomize(currentWidth, currentSeed, currentSeedBand);
   applyScale();
@@ -104,7 +147,6 @@ function ensureSize(): void {
 
 function applyScale(): void {
   canvasEl.style.transform = `scale(${currentScale})`;
-  canvasWrapEl.classList.toggle("canvasWrapNoCenter", currentScale > 1);
 }
 
 function updateNumberInputByStep(input: HTMLInputElement, direction: 1 | -1): void {
@@ -133,9 +175,6 @@ function setNumberControlDisabled(input: HTMLInputElement, disabled: boolean): v
 function applyStepsAutoMode(): void {
   const isAuto = stepsAutoEl.checked;
   setNumberControlDisabled(stepsEl, isAuto);
-  if (isAuto) {
-    syncAutoSteps();
-  }
 }
 
 function setupNumberControls(): void {
@@ -191,26 +230,26 @@ function onUpdate(): void {
   renderSyntaxErrors(syntaxErrors);
   if (entries.length === 0) {
     infoEl.textContent = errors > 0 ? `${errors} errors` : "no rules";
+    simInfoEl.textContent = "";
     lastRuleNameForCopy = "";
     infoEl.classList.remove("infoCopyable");
-    infoEl.removeAttribute("title");
     return;
   }
 
   const rule = fromEntries(entries);
   renderer.uploadTruthTable(rule.table, rule.leftCtx, rule.rightCtx);
+  const effectiveSteps = getEffectiveSteps();
 
   const t0 = performance.now();
-  renderer.simulate(currentSteps);
+  renderer.simulate(effectiveSteps, currentBoundaryMode);
   renderer.display();
   const dt = (performance.now() - t0).toFixed(1);
 
-  const displayRuleName = rule.name.startsWith("rule") ? `rule-${rule.name.slice(4)}` : rule.name;
+  const displayRuleName = rule.name;
   lastRuleNameForCopy = displayRuleName;
   infoEl.classList.add("infoCopyable");
-  infoEl.title = "click to copy rule name";
-  infoEl.textContent = `${displayRuleName} | ${dt}ms`;
-  simInfoEl.textContent = "";
+  infoEl.textContent = displayRuleName;
+  simInfoEl.textContent = `${dt}ms`;
 }
 
 function renderSyntaxErrors(
@@ -258,9 +297,34 @@ newRandomBtn.addEventListener("click", () => {
   requestUpdate();
 });
 
+importRuleNameBtn.addEventListener("click", () => {
+  const raw = window.prompt("paste rule name like: rule-30-base-3", lastRuleNameForCopy || "");
+  if (!raw) return;
+
+  const importedLines = importRulesFromName(raw);
+  if (!importedLines) {
+    infoEl.textContent = "invalid rule name format";
+    return;
+  }
+
+  rulesEl.value = importedLines.join("\n") + (importedLines.length > 0 ? "\n" : "");
+  onUpdate();
+});
+
+exportPngBtn.addEventListener("click", () => {
+  const dataUrl = canvasEl.toDataURL("image/png");
+  const fileBase = (lastRuleNameForCopy || "rule")
+    .replace(/[^a-z0-9\-_.]+/gi, "_")
+    .slice(0, 80);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const link = document.createElement("a");
+  link.href = dataUrl;
+  link.download = `${fileBase}_${timestamp}.png`;
+  link.click();
+});
+
 stepsEl.addEventListener("input", () => {
   if (stepsAutoEl.checked) {
-    syncAutoSteps();
     return;
   }
   currentSteps = Math.max(1, parseInt(stepsEl.value) || 100);
@@ -270,7 +334,6 @@ stepsEl.addEventListener("input", () => {
 
 widthEl.addEventListener("input", () => {
   currentWidth = Math.max(11, parseInt(widthEl.value) || 201);
-  syncAutoSteps();
   ensureSize();
   requestUpdate();
 });
@@ -288,7 +351,6 @@ seedEl.addEventListener("input", () => {
 
 seedBandEl.addEventListener("input", () => {
   setSeedBand(Number(seedBandEl.value));
-  syncAutoSteps();
   if (stepsAutoEl.checked) {
     ensureSize();
     requestUpdate();
@@ -297,6 +359,23 @@ seedBandEl.addEventListener("input", () => {
   renderer.randomize(currentWidth, currentSeed, currentSeedBand);
   requestUpdate();
 });
+
+boundaryModeEl.addEventListener("change", () => {
+  setBoundaryMode(boundaryModeEl.value);
+  requestUpdate();
+});
+
+boundaryModeEl.addEventListener("wheel", (event) => {
+  event.preventDefault();
+  const direction = event.deltaY < 0 ? -1 : 1;
+  const nextIndex = Math.max(
+    0,
+    Math.min(boundaryModeEl.options.length - 1, boundaryModeEl.selectedIndex + direction)
+  );
+  if (nextIndex === boundaryModeEl.selectedIndex) return;
+  boundaryModeEl.selectedIndex = nextIndex;
+  boundaryModeEl.dispatchEvent(new Event("change", { bubbles: true }));
+}, { passive: false });
 
 stepsAutoEl.addEventListener("change", () => {
   applyStepsAutoMode();
@@ -316,7 +395,19 @@ errorsCloseEl.addEventListener("click", () => {
 
 infoEl.addEventListener("click", async () => {
   if (!lastRuleNameForCopy) return;
-  await navigator.clipboard.writeText(lastRuleNameForCopy);
+  try {
+    await navigator.clipboard.writeText(lastRuleNameForCopy);
+    infoEl.classList.add("infoCopied");
+    if (copyTooltipTimer !== null) {
+      window.clearTimeout(copyTooltipTimer);
+    }
+    copyTooltipTimer = window.setTimeout(() => {
+      infoEl.classList.remove("infoCopied");
+      copyTooltipTimer = null;
+    }, 1200);
+  } catch {
+    infoEl.textContent = "copy failed";
+  }
 });
 
 // ── Splitter drag ────────────────────────────────────────────
@@ -351,6 +442,7 @@ splitterEl.addEventListener("mousedown", (e: MouseEvent) => {
 setupNumberControls();
 setSeed(Number(seedEl.value) || 1);
 setSeedBand(Number(seedBandEl.value) || 20);
+setBoundaryMode(boundaryModeEl.value);
 setScale(Number(zoomEl.value) || 5);
 applyStepsAutoMode();
 ensureSize();

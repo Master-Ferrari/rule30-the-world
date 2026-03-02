@@ -10,24 +10,34 @@
     <div id="header">
       <!-- <span class="help">left(center)right&gt;output (0/1/x)</span> -->
       <span id="info"></span>
+      <span>|</span>
       <span id="simInfo"></span>
+      <button id="importRuleName" class="controlButton">import rule</button>
       <label>width <input type="number" id="width" value="750" min="1" step="1"></label>
-      <label>scale <input type="number" id="zoom" value="2" min="1" step="1"></label>
-      <label>seed <input type="number" id="seed" value="5" min="0" step="1"></label>
+      <label>scale <input type="number" id="zoom" value="1" min="1" step="1"></label>
       <label>center <input type="number" id="seedBand" value="25" min="1" step="1"></label>
+      <label>seed <input type="number" id="seed" value="5" min="0" step="1"></label>
+      <label>edge
+        <select id="boundaryMode">
+          <option value="0" selected>0</option>
+          <option value="1">1</option>
+          <option value="wrap">wrap</option>
+        </select>
+      </label>
       <button id="newRandom" class="controlButton">random seed</button>
-      <label class="checkboxControl"><input type="checkbox" id="autoUpdate" checked>update</label>
       <label>steps <input type="number" id="steps" value="2000" min="1"></label>
       <label class="checkboxControl"><input type="checkbox" id="stepsAuto">triangle</label>
+      <label class="checkboxControl"><input type="checkbox" id="autoUpdate" checked>update</label>
+      <button id="exportPng" class="controlButton">export png</button>
     </div>
     <div id="leftPane">
       <textarea id="rules" spellcheck="false"># creepers
 10(1)01>1
-01(1)10>1
 01(0)10>1
 01(0)00>1
 00(0)10>1
-1(1)1>1
+#1(x)1>1
+1(1)1>1        
 </textarea>
       <div id="errorsPanel" class="hidden">
         <div id="errorsHeader">

@@ -163,7 +163,7 @@ function computeRuleName(entries: ParsedEntry[]): string {
     for (let i = 0; i < nameTable.length; i++) {
       if (nameTable[i]) n += 2 ** i;
     }
-    return `rule${n}-base-${base}`;
+    return `rule-${n}-base-${base}`;
   }
 
   let n = 0n;
@@ -172,9 +172,9 @@ function computeRuleName(entries: ParsedEntry[]): string {
   }
   const s = n.toString();
   if (s.length > 22) {
-    return `rule${s.slice(0, 20)}..-base-${base}`;
+    return `rule-${s.slice(0, 20)}..-base-${base}`;
   }
-  return `rule${s}-base-${base}`;
+  return `rule-${s}-base-${base}`;
 }
 
 function computeNameBase(entries: ParsedEntry[]): number {
