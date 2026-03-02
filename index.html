@@ -15,17 +15,17 @@
           <span>|</span>
           <span id="simInfo"></span>
           <button id="importRuleName" class="controlButton">import rule</button>
-          <button id="exportPng" class="controlButton">export png</button>
           <button id="openWolfram" class="controlButton">on Wolfram</button>
+          <button id="exportPng" class="controlButton">export png</button>
           <label>width <input type="number" id="width" value="750" min="1" step="1"></label>
           <label>scale <input type="number" id="zoom" value="1" min="1" step="1"></label>
           <label>center <input type="number" id="seedBand" value="25" min="1" step="1"></label>
           <label>seed <input type="number" id="seed" value="5" min="0" step="1"></label>
           <button id="newRandom" class="controlButton">random seed</button>
           <label>edge
-          <span class="selectControl">
-            <select id="boundaryMode">
-              <option value="0" selected>0</option>
+            <span class="selectControl">
+              <select id="boundaryMode">
+                <option value="0" selected>0</option>
               <option value="1">1</option>
               <option value="wrap">wrap</option>
             </select>
@@ -33,10 +33,11 @@
               <svg class="numberSpinIcon" viewBox="0 0 9 5"><path d="M1 1L4.5 4L8 1"/></svg>
             </span>
           </span>
-          </label>
-          <label>steps <input type="number" id="steps" value="2000" min="1"></label>
-          <label class="checkboxControl"><input type="checkbox" id="stepsAuto">triangle</label>
-          <label class="checkboxControl"><input type="checkbox" id="autoUpdate" checked>update</label>
+        </label>
+        <label>steps <input type="number" id="steps" value="2000" min="1"></label>
+        <label class="checkboxControl"><input type="checkbox" id="stepsAuto">triangle</label>
+        <label class="checkboxControl"><input type="checkbox" id="autoUpdate" checked>update</label>
+        <button id="playBtn" class="controlButton">play</button>
         </div>
       </div>
       <div id="headerBrand">

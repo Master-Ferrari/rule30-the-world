@@ -23,6 +23,7 @@ const newRandomBtn = document.getElementById("newRandom") as HTMLButtonElement;
 const importRuleNameBtn = document.getElementById("importRuleName") as HTMLButtonElement;
 const exportPngBtn = document.getElementById("exportPng") as HTMLButtonElement;
 const openWolframBtn = document.getElementById("openWolfram") as HTMLButtonElement;
+const playBtn = document.getElementById("playBtn") as HTMLButtonElement;
 const canvasEl = document.getElementById("canvas") as HTMLCanvasElement;
 const canvasWrapEl = document.getElementById("canvasWrap") as HTMLDivElement;
 // const canvasZoomEl = document.getElementById("canvas-holder") as HTMLDivElement;
@@ -45,10 +46,13 @@ let errorsDismissed = false;
 let lastErrorsSignature = "";
 let lastRuleNameForCopy = "";
 let copyTooltipTimer: number | null = null;
+let streamAnimId: number | null = null;
+let isPlaying = false;
 
 function importRulesFromName(ruleNameRaw: string): string[] | null {
   const normalized = ruleNameRaw.trim().toLowerCase();
   const radiusMatch = normalized.match(/^rule\s+(\d+)\s+radius\s+(\d+)$/);
+  const radiusFirstMatch = normalized.match(/^radius\s+(\d+)\s+rule\s+(\d+)$/);
   const legacyMatch = normalized.match(/^rule-(\d+)-base-(\d+)$/)
     || normalized.match(/^rule(\d+)base(\d+)$/);
 
@@ -58,6 +62,10 @@ function importRulesFromName(ruleNameRaw: string): string[] | null {
   if (radiusMatch) {
     value = BigInt(radiusMatch[1]);
     const radius = Number(radiusMatch[2]);
+    base = radius * 2 + 1;
+  } else if (radiusFirstMatch) {
+    value = BigInt(radiusFirstMatch[2]);
+    const radius = Number(radiusFirstMatch[1]);
     base = radius * 2 + 1;
   } else if (legacyMatch) {
     value = BigInt(legacyMatch[1]);
@@ -304,7 +312,42 @@ function renderSyntaxErrors(
   }
 }
 
+function stopPlay(): void {
+  if (streamAnimId !== null) {
+    cancelAnimationFrame(streamAnimId);
+    streamAnimId = null;
+  }
+  isPlaying = false;
+  playBtn.textContent = "play";
+}
+
+function startPlay(): void {
+  const { entries } = parseText(rulesEl.value);
+  if (entries.length === 0) return;
+
+  const rule = fromEntries(entries);
+  renderer.uploadTruthTable(rule.table, rule.leftCtx, rule.rightCtx);
+
+  lastRuleNameForCopy = rule.name;
+  infoEl.classList.add("infoCopyable");
+  infoEl.textContent = rule.name;
+  simInfoEl.textContent = "";
+
+  renderer.beginStream(currentBoundaryMode);
+
+  isPlaying = true;
+  playBtn.textContent = "stop";
+
+  function tick() {
+    renderer.stepStream();
+    renderer.display();
+    streamAnimId = requestAnimationFrame(tick);
+  }
+  streamAnimId = requestAnimationFrame(tick);
+}
+
 function requestUpdate(): void {
+  stopPlay();
   if (!autoUpdateEl.checked) return;
   onUpdate();
 }
@@ -350,6 +393,15 @@ openWolframBtn.addEventListener("click", () => {
   if (!m) return;
   const url = `https://www.wolframalpha.com/input?i=radius+${m[2]}+rule+${m[1]}`;
   window.open(url, "_blank");
+});
+
+playBtn.addEventListener("click", () => {
+  if (isPlaying) {
+    stopPlay();
+    onUpdate();
+  } else {
+    startPlay();
+  }
 });
 
 stepsEl.addEventListener("input", () => {

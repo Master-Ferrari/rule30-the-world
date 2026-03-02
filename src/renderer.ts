@@ -52,6 +52,12 @@ export class Renderer {
   // Uniform locations (display)
   private uDispHistory!: WebGLUniformLocation;
   private uDispRows!: WebGLUniformLocation;
+  private uDispHead!: WebGLUniformLocation;
+
+  // Streaming state
+  private head = 0;
+  private readIdx = 0;
+  private writeIdx = 1;
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
@@ -78,6 +84,7 @@ export class Renderer {
     // Display uniforms
     this.uDispHistory = gl.getUniformLocation(this.displayProgram, "u_history")!;
     this.uDispRows = gl.getUniformLocation(this.displayProgram, "u_rows")!;
+    this.uDispHead = gl.getUniformLocation(this.displayProgram, "u_head")!;
 
     // VAO (empty — we use gl_VertexID)
     this.vao = gl.createVertexArray()!;
@@ -207,6 +214,81 @@ export class Renderer {
     }
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    this.head = 0;
+  }
+
+  /** Prepare ring-buffer streaming. Call once before the first stepStream(). */
+  beginStream(boundaryMode: number): void {
+    const gl = this.gl;
+    const width = this.gridWidth;
+
+    // Restore gen 0 into pingPong[0]
+    gl.bindTexture(gl.TEXTURE_2D, this.pingPong[0]);
+    gl.texSubImage2D(
+      gl.TEXTURE_2D, 0, 0, 0,
+      width, 1,
+      gl.RED, gl.UNSIGNED_BYTE, this.initialRowData,
+    );
+
+    // Clear history texture (via framebuffer clear so it's GPU-side)
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.copyFbo);
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+      gl.TEXTURE_2D, this.historyTex, 0,
+    );
+    gl.clearColor(0, 0, 0, 0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    // Copy gen 0 to row 0
+    this.copyRowToHistory(this.pingPong[0], 0);
+
+    // Set up sim program uniforms (persist for all stepStream calls)
+    gl.useProgram(this.simProgram);
+    gl.uniform1i(this.uSimCurrentGen, 0);
+    gl.uniform1i(this.uSimTruthTable, 1);
+    gl.uniform1i(this.uSimWidth, width);
+    gl.uniform1i(this.uSimLeftCtx, this.leftCtx);
+    gl.uniform1i(this.uSimRuleWidth, this.ruleWidth);
+    gl.uniform1i(this.uSimBoundaryMode, boundaryMode);
+
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.truthTableTex);
+
+    gl.bindVertexArray(this.vao);
+
+    this.readIdx = 0;
+    this.writeIdx = 1;
+    this.head = 1;  // row 0 already written
+  }
+
+  /** Compute exactly one CA step and append it to the ring-buffer history. */
+  stepStream(): void {
+    const gl = this.gl;
+
+    gl.useProgram(this.simProgram);
+    gl.bindVertexArray(this.vao);
+
+    // Bind current gen as input
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.pingPong[this.readIdx]);
+    // Truth table stays on TEXTURE1 from beginStream / last step
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, this.truthTableTex);
+
+    // Render next gen into pingPong[writeIdx]
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.simFbo);
+    gl.framebufferTexture2D(
+      gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+      gl.TEXTURE_2D, this.pingPong[this.writeIdx], 0,
+    );
+    gl.viewport(0, 0, this.gridWidth, 1);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    // Append result to ring-buffer history
+    this.copyRowToHistory(this.pingPong[this.writeIdx], this.head % this.totalRows);
+    this.head++;
+
+    [this.readIdx, this.writeIdx] = [this.writeIdx, this.readIdx];
   }
 
   /** Render history texture to screen. */
@@ -219,6 +301,7 @@ export class Renderer {
     gl.useProgram(this.displayProgram);
     gl.uniform1i(this.uDispHistory, 0);
     gl.uniform1i(this.uDispRows, this.totalRows);
+    gl.uniform1i(this.uDispHead, this.head % this.totalRows);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.historyTex);
