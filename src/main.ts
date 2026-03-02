@@ -10,6 +10,7 @@ const simInfoEl = document.getElementById("simInfo")!;
 const errorsPanelEl = document.getElementById("errorsPanel")!;
 const errorsListEl = document.getElementById("errorsList")!;
 const errorsCloseEl = document.getElementById("errorsClose") as HTMLButtonElement;
+const syntaxInfoEl = document.getElementById("syntaxInfo") as HTMLButtonElement;
 const stepsEl = document.getElementById("steps") as HTMLInputElement;
 const widthEl = document.getElementById("width") as HTMLInputElement;
 const zoomEl = document.getElementById("zoom") as HTMLInputElement;
@@ -96,7 +97,7 @@ function importRulesFromName(ruleNameRaw: string): string[] | null {
     const left = bits.slice(0, leftCtx).join("");
     const center = String(bits[leftCtx]);
     const right = bits.slice(leftCtx + 1).join("");
-    lines.push(`${left}(${center})${right}>1`);
+    lines.push(`${left}(${center})${right}`);
   }
 
   return lines;
@@ -482,6 +483,18 @@ autoUpdateEl.addEventListener("change", () => {
 errorsCloseEl.addEventListener("click", () => {
   errorsDismissed = true;
   errorsPanelEl.classList.add("hidden");
+});
+
+const SYNTAX_HELP = `  —  **RULE THE WORLDS** by master-ferrari  —
+  —  1D cellular automaton editor  —  
+
+( )   parentheses mark the center cell; under this cell will be placed 1
+#     comment — line is ignored
+x     wildcard — expands into two rules: one for 0, one for 1
+-s    symmetry — generates the mirror rule around the center`;
+
+syntaxInfoEl.addEventListener("click", () => {
+  alert(SYNTAX_HELP);
 });
 
 infoEl.addEventListener("click", async () => {

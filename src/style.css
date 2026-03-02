@@ -450,3 +450,10 @@ body {
 #app.dragging * {
   user-select: none;
 }
+
+/* ── Errors panel ───────────────────── */
+
+#errorsHeaderBtns {
+  display: flex;
+  gap: 18px;
+}

@@ -22,7 +22,7 @@ export interface RuleSyntaxError {
   raw: string;
 }
 
-const LINE_RE = /^([01x]*)\(([01x])\)([01x]*)>([01])$/;
+const LINE_RE = /^([01x]*)\(([01x])\)([01x]*)$/;
 
 /**
  * Parse a single rule line like `0(1)0>1` or `1(x)1>1`.
@@ -37,10 +37,10 @@ export function parseRuleLine(raw: string): ParsedEntry[] | null {
   const m = line.match(LINE_RE);
   if (!m) throw new Error(`Bad syntax: '${raw.trim()}'`);
 
-  const [, leftStr, centerStr, rightStr, outStr] = m;
+  const [, leftStr, centerStr, rightStr] = m;
   const leftCtx = leftStr.length;
   const rightCtx = rightStr.length;
-  const output = Number(outStr);
+  const output = 1;
 
   const entries: ParsedEntry[] = expandTokens([...leftStr, centerStr, ...rightStr]).map((pattern) => ({
     pattern, leftCtx, rightCtx, output,
