@@ -23,6 +23,7 @@ const newRandomBtn = document.getElementById("newRandom") as HTMLButtonElement;
 const importRuleNameBtn = document.getElementById("importRuleName") as HTMLButtonElement;
 const exportPngBtn = document.getElementById("exportPng") as HTMLButtonElement;
 const openWolframBtn = document.getElementById("openWolfram") as HTMLButtonElement;
+const playSpeedEl = document.getElementById("playSpeed") as HTMLInputElement;
 const playBtn = document.getElementById("playBtn") as HTMLButtonElement;
 const canvasEl = document.getElementById("canvas") as HTMLCanvasElement;
 const canvasWrapEl = document.getElementById("canvasWrap") as HTMLDivElement;
@@ -48,6 +49,7 @@ let lastRuleNameForCopy = "";
 let copyTooltipTimer: number | null = null;
 let streamAnimId: number | null = null;
 let isPlaying = false;
+let currentSpeed = 1;
 
 function importRulesFromName(ruleNameRaw: string): string[] | null {
   const normalized = ruleNameRaw.trim().toLowerCase();
@@ -208,7 +210,7 @@ function applyStepsAutoMode(): void {
 }
 
 function setupNumberControls(): void {
-  const inputs = [stepsEl, widthEl, zoomEl, seedEl, seedBandEl];
+  const inputs = [stepsEl, widthEl, zoomEl, seedEl, seedBandEl, playSpeedEl];
 
   for (const input of inputs) {
     const wrapper = document.createElement("span");
@@ -339,7 +341,7 @@ function startPlay(): void {
   playBtn.textContent = "stop";
 
   function tick() {
-    renderer.stepStream();
+    for (let i = 0; i < currentSpeed; i++) renderer.stepStream();
     renderer.display();
     streamAnimId = requestAnimationFrame(tick);
   }
@@ -393,6 +395,10 @@ openWolframBtn.addEventListener("click", () => {
   if (!m) return;
   const url = `https://www.wolframalpha.com/input?i=radius+${m[2]}+rule+${m[1]}`;
   window.open(url, "_blank");
+});
+
+playSpeedEl.addEventListener("input", () => {
+  currentSpeed = Math.max(1, parseInt(playSpeedEl.value) || 1);
 });
 
 playBtn.addEventListener("click", () => {
