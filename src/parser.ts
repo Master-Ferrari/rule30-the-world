@@ -29,25 +29,32 @@ const LINE_RE = /^([01x]*)\(([01x])\)([01x]*)>([01])$/;
  * Returns null for blank/comment lines. Throws on bad syntax.
  */
 export function parseRuleLine(raw: string): ParsedEntry[] | null {
-  const line = raw.trim().replace(/\s/g, "").toLowerCase();
+  const trimmed = raw.trim();
+  const hasSymmetry = /-{1,2}[sS]/.test(trimmed);
+  const line = trimmed.replace(/-{1,2}[sS]/g, "").replace(/\s/g, "").toLowerCase();
   if (!line || line.startsWith("#")) return null;
 
   const m = line.match(LINE_RE);
   if (!m) throw new Error(`Bad syntax: '${raw.trim()}'`);
 
   const [, leftStr, centerStr, rightStr, outStr] = m;
-  const tokens = [...leftStr, centerStr, ...rightStr];
-  const expandedPatterns = expandTokens(tokens);
   const leftCtx = leftStr.length;
   const rightCtx = rightStr.length;
   const output = Number(outStr);
 
-  return expandedPatterns.map((pattern) => ({
-    pattern,
-    leftCtx,
-    rightCtx,
-    output,
+  const entries: ParsedEntry[] = expandTokens([...leftStr, centerStr, ...rightStr]).map((pattern) => ({
+    pattern, leftCtx, rightCtx, output,
   }));
+
+  if (hasSymmetry) {
+    const mirLeft = [...rightStr].reverse().join("");
+    const mirRight = [...leftStr].reverse().join("");
+    expandTokens([...mirLeft, centerStr, ...mirRight]).forEach((pattern) => {
+      entries.push({ pattern, leftCtx: mirLeft.length, rightCtx: mirRight.length, output });
+    });
+  }
+
+  return entries;
 }
 
 /**
