@@ -5,6 +5,7 @@ export interface ParsedEntry {
   leftCtx: number;
   rightCtx: number;
   output: number;
+  lineIndex: number;
 }
 
 export interface ComposedRule {
@@ -13,6 +14,8 @@ export interface ComposedRule {
   width: number;
   nPatterns: number;
   table: Uint8Array;
+  colorTable: Uint8Array; // 0=dead, 1..N=rule line color (1-based, 255=initial cell reserved)
+  numLines: number;
   name: string;
 }
 
@@ -28,7 +31,7 @@ const LINE_RE = /^([01x]*)\(([01x])\)([01x]*)$/;
  * Parse a single rule line like `0(1)0>1` or `1(x)1>1`.
  * Returns null for blank/comment lines. Throws on bad syntax.
  */
-export function parseRuleLine(raw: string): ParsedEntry[] | null {
+export function parseRuleLine(raw: string, lineIndex = 0): ParsedEntry[] | null {
   const trimmed = raw.trim();
   const hasSymmetry = /-{1,2}[sS]/.test(trimmed);
   const line = trimmed.replace(/-{1,2}[sS]/g, "").replace(/\s/g, "").toLowerCase();
@@ -43,14 +46,14 @@ export function parseRuleLine(raw: string): ParsedEntry[] | null {
   const output = 1;
 
   const entries: ParsedEntry[] = expandTokens([...leftStr, centerStr, ...rightStr]).map((pattern) => ({
-    pattern, leftCtx, rightCtx, output,
+    pattern, leftCtx, rightCtx, output, lineIndex,
   }));
 
   if (hasSymmetry) {
     const mirLeft = [...rightStr].reverse().join("");
     const mirRight = [...leftStr].reverse().join("");
     expandTokens([...mirLeft, centerStr, ...mirRight]).forEach((pattern) => {
-      entries.push({ pattern, leftCtx: mirLeft.length, rightCtx: mirRight.length, output });
+      entries.push({ pattern, leftCtx: mirLeft.length, rightCtx: mirRight.length, output, lineIndex });
     });
   }
 
@@ -64,11 +67,15 @@ export function parseText(text: string): { entries: ParsedEntry[]; errors: numbe
   const entries: ParsedEntry[] = [];
   const syntaxErrors: RuleSyntaxError[] = [];
   const lines = text.split("\n");
+  let ruleLineIdx = 0;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     try {
-      const e = parseRuleLine(line);
-      if (e) entries.push(...e);
+      const e = parseRuleLine(line, ruleLineIdx);
+      if (e) {
+        entries.push(...e);
+        ruleLineIdx++;
+      }
     } catch (error) {
       syntaxErrors.push({
         line: i + 1,
@@ -86,7 +93,7 @@ export function parseText(text: string): { entries: ParsedEntry[]; errors: numbe
  */
 export function fromEntries(entries: ParsedEntry[]): ComposedRule {
   if (entries.length === 0) {
-    return { leftCtx: 0, rightCtx: 0, width: 1, nPatterns: 2, table: new Uint8Array(2), name: "rule0base1" };
+    return { leftCtx: 0, rightCtx: 0, width: 1, nPatterns: 2, table: new Uint8Array(2), colorTable: new Uint8Array(2), numLines: 0, name: "rule0base1" };
   }
 
   const effLeft = Math.max(...entries.map((e) => e.leftCtx));
@@ -94,6 +101,7 @@ export function fromEntries(entries: ParsedEntry[]): ComposedRule {
   const width = effLeft + 1 + effRight;
   const nPatterns = 1 << width;
   const table = new Uint8Array(nPatterns); // all zeros
+  const colorTable = new Uint8Array(nPatterns); // 0=dead, 1..254=rule line (1-based)
 
   // Sort by ascending width (narrow = general, wide = specific override)
   const sorted = [...entries].sort(
@@ -123,12 +131,14 @@ export function fromEntries(entries: ParsedEntry[]): ComposedRule {
           idx = (idx << 1) | ((rc >> (extraRight - 1 - j)) & 1);
         }
         table[idx] = entry.output;
+        colorTable[idx] = entry.output ? Math.min(entry.lineIndex + 1, 254) : 0;
       }
     }
   }
 
+  const numLines = Math.max(...entries.map((e) => e.lineIndex)) + 1;
   const name = computeRuleName(entries);
-  return { leftCtx: effLeft, rightCtx: effRight, width, nPatterns, table, name };
+  return { leftCtx: effLeft, rightCtx: effRight, width, nPatterns, table, colorTable, numLines, name };
 }
 
 /**

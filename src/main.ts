@@ -19,6 +19,7 @@ const seedBandEl = document.getElementById("seedBand") as HTMLInputElement;
 const boundaryModeEl = document.getElementById("boundaryMode") as HTMLSelectElement;
 const stepsAutoEl = document.getElementById("stepsAuto") as HTMLInputElement;
 const autoUpdateEl = document.getElementById("autoUpdate") as HTMLInputElement;
+const coloredEl = document.getElementById("colored") as HTMLInputElement;
 const newRandomBtn = document.getElementById("newRandom") as HTMLButtonElement;
 const importRuleNameBtn = document.getElementById("importRuleName") as HTMLButtonElement;
 const exportPngBtn = document.getElementById("exportPng") as HTMLButtonElement;
@@ -292,6 +293,7 @@ interface AppState {
   stepsAuto: boolean;
   autoUpdate: boolean;
   playSpeed: number;
+  colored: boolean;
 }
 
 function collectState(): AppState {
@@ -306,6 +308,7 @@ function collectState(): AppState {
     stepsAuto: stepsAutoEl.checked,
     autoUpdate: autoUpdateEl.checked,
     playSpeed: currentSpeed,
+    colored: coloredEl.checked,
   };
 }
 
@@ -368,7 +371,8 @@ function onUpdate(): void {
   }
 
   const rule = fromEntries(entries);
-  renderer.uploadTruthTable(rule.table, rule.leftCtx, rule.rightCtx);
+  renderer.uploadTruthTable(rule.colorTable, rule.leftCtx, rule.rightCtx);
+  renderer.setColorMode(coloredEl.checked, rule.numLines);
   const effectiveSteps = getEffectiveSteps();
 
   const t0 = performance.now();
@@ -426,7 +430,8 @@ function startPlay(): void {
   if (entries.length === 0) return;
 
   const rule = fromEntries(entries);
-  renderer.uploadTruthTable(rule.table, rule.leftCtx, rule.rightCtx);
+  renderer.uploadTruthTable(rule.colorTable, rule.leftCtx, rule.rightCtx);
+  renderer.setColorMode(coloredEl.checked, rule.numLines);
 
   lastRuleNameForCopy = rule.name;
   infoEl.classList.add("infoCopyable");
@@ -559,6 +564,10 @@ stepsAutoEl.addEventListener("change", () => {
 autoUpdateEl.addEventListener("change", () => {
   if (!autoUpdateEl.checked) return;
   onUpdate();
+});
+
+coloredEl.addEventListener("change", () => {
+  requestUpdate();
 });
 
 errorsCloseEl.addEventListener("click", () => {
@@ -697,6 +706,7 @@ applyStepsAutoMode();
       setBoundaryMode(state.boundaryMode);
       currentSpeed = state.playSpeed;
       playSpeedEl.value = String(state.playSpeed);
+      coloredEl.checked = state.colored ?? false;
       setScale(state.zoom);
       setSeed(state.seed);
       setSeedBand(state.seedBand);

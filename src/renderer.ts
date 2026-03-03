@@ -53,6 +53,12 @@ export class Renderer {
   private uDispHistory!: WebGLUniformLocation;
   private uDispRows!: WebGLUniformLocation;
   private uDispHead!: WebGLUniformLocation;
+  private uDispColored!: WebGLUniformLocation;
+  private uDispNumColors!: WebGLUniformLocation;
+
+  // Color mode state
+  private colored = false;
+  private numColors = 1;
 
   // Streaming state
   private head = 0;
@@ -85,6 +91,8 @@ export class Renderer {
     this.uDispHistory = gl.getUniformLocation(this.displayProgram, "u_history")!;
     this.uDispRows = gl.getUniformLocation(this.displayProgram, "u_rows")!;
     this.uDispHead = gl.getUniformLocation(this.displayProgram, "u_head")!;
+    this.uDispColored = gl.getUniformLocation(this.displayProgram, "u_colored")!;
+    this.uDispNumColors = gl.getUniformLocation(this.displayProgram, "u_numColors")!;
 
     // VAO (empty — we use gl_VertexID)
     this.vao = gl.createVertexArray()!;
@@ -114,28 +122,28 @@ export class Renderer {
     this.initialRowData = new Uint8Array(width);
   }
 
-  /** Upload truth table. */
-  uploadTruthTable(table: Uint8Array, leftCtx: number, rightCtx: number): void {
+  /** Upload color table (0=dead, 1..254=rule line color index). */
+  uploadTruthTable(colorTable: Uint8Array, leftCtx: number, rightCtx: number): void {
     const gl = this.gl;
     this.leftCtx = leftCtx;
     this.ruleWidth = leftCtx + 1 + rightCtx;
 
-    // Convert 0/1 → 0/255
-    const data = new Uint8Array(table.length);
-    for (let i = 0; i < table.length; i++) {
-      data[i] = table[i] ? 255 : 0;
-    }
-
     gl.bindTexture(gl.TEXTURE_2D, this.truthTableTex);
     gl.texImage2D(
       gl.TEXTURE_2D, 0, gl.R8,
-      table.length, 1, 0,
-      gl.RED, gl.UNSIGNED_BYTE, data,
+      colorTable.length, 1, 0,
+      gl.RED, gl.UNSIGNED_BYTE, colorTable,
     );
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  }
+
+  /** Set color mode for display. */
+  setColorMode(colored: boolean, numColors: number): void {
+    this.colored = colored;
+    this.numColors = numColors;
   }
 
   /** Fill pingPong[0] with random state only in the center band. */
@@ -302,6 +310,8 @@ export class Renderer {
     gl.uniform1i(this.uDispHistory, 0);
     gl.uniform1i(this.uDispRows, this.totalRows);
     gl.uniform1i(this.uDispHead, this.head % this.totalRows);
+    gl.uniform1i(this.uDispColored, this.colored ? 1 : 0);
+    gl.uniform1i(this.uDispNumColors, this.numColors);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, this.historyTex);
