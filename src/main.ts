@@ -25,6 +25,7 @@ const exportPngBtn = document.getElementById("exportPng") as HTMLButtonElement;
 const openWolframBtn = document.getElementById("openWolfram") as HTMLButtonElement;
 const playSpeedEl = document.getElementById("playSpeed") as HTMLInputElement;
 const playBtn = document.getElementById("playBtn") as HTMLButtonElement;
+const shareLinkBtn = document.getElementById("shareLink") as HTMLButtonElement;
 const canvasEl = document.getElementById("canvas") as HTMLCanvasElement;
 const canvasWrapEl = document.getElementById("canvasWrap") as HTMLDivElement;
 // const canvasZoomEl = document.getElementById("canvas-holder") as HTMLDivElement;
@@ -101,6 +102,12 @@ function importRulesFromName(ruleNameRaw: string): string[] | null {
   }
 
   return lines;
+}
+
+function shortenRuleName(name: string): string {
+  const m = name.match(/^(rule )(\d+)( radius \d+)$/);
+  if (!m || m[2].length <= 20) return name;
+  return `${m[1]}${m[2].slice(0, 20)}…${m[3]}`;
 }
 
 function clampToInputRange(input: HTMLInputElement, value: number): number {
@@ -272,6 +279,81 @@ function setupWheelScrolling(): void {
   }
 }
 
+// ── Share / State serialization ──────────────────────────────
+
+interface AppState {
+  rules: string;
+  width: number;
+  zoom: number;
+  seedBand: number;
+  seed: number;
+  boundaryMode: string;
+  steps: number;
+  stepsAuto: boolean;
+  autoUpdate: boolean;
+  playSpeed: number;
+}
+
+function collectState(): AppState {
+  return {
+    rules: rulesEl.value,
+    width: currentWidth,
+    zoom: currentScale,
+    seedBand: currentSeedBand,
+    seed: currentSeed,
+    boundaryMode: boundaryModeEl.value,
+    steps: currentSteps,
+    stepsAuto: stepsAutoEl.checked,
+    autoUpdate: autoUpdateEl.checked,
+    playSpeed: currentSpeed,
+  };
+}
+
+async function compressToBase64(str: string): Promise<string> {
+  const bytes = new TextEncoder().encode(str);
+  const cs = new CompressionStream("deflate-raw");
+  const writer = cs.writable.getWriter();
+  writer.write(bytes);
+  writer.close();
+  const chunks: Uint8Array[] = [];
+  const reader = cs.readable.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+  const total = chunks.reduce((n, c) => n + c.length, 0);
+  const buf = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) { buf.set(c, off); off += c.length; }
+  let binary = "";
+  for (let i = 0; i < buf.length; i++) binary += String.fromCharCode(buf[i]);
+  return btoa(binary).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+async function decompressFromBase64(encoded: string): Promise<string> {
+  const base64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  const ds = new DecompressionStream("deflate-raw");
+  const writer = ds.writable.getWriter();
+  writer.write(bytes);
+  writer.close();
+  const chunks: Uint8Array[] = [];
+  const reader = ds.readable.getReader();
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+  }
+  const total = chunks.reduce((n, c) => n + c.length, 0);
+  const buf = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) { buf.set(c, off); off += c.length; }
+  return new TextDecoder().decode(buf);
+}
+
 // ── Update ───────────────────────────────────────────────────
 
 function onUpdate(): void {
@@ -294,10 +376,9 @@ function onUpdate(): void {
   renderer.display();
   const dt = (performance.now() - t0).toFixed(1);
 
-  const displayRuleName = rule.name;
-  lastRuleNameForCopy = displayRuleName;
+  lastRuleNameForCopy = rule.name;
   infoEl.classList.add("infoCopyable");
-  infoEl.textContent = displayRuleName;
+  infoEl.textContent = shortenRuleName(rule.name);
   simInfoEl.textContent = `${dt}ms`;
 }
 
@@ -349,7 +430,7 @@ function startPlay(): void {
 
   lastRuleNameForCopy = rule.name;
   infoEl.classList.add("infoCopyable");
-  infoEl.textContent = rule.name;
+  infoEl.textContent = shortenRuleName(rule.name);
   simInfoEl.textContent = "";
 
   renderer.beginStream(currentBoundaryMode);
@@ -497,6 +578,19 @@ syntaxInfoEl.addEventListener("click", () => {
   alert(SYNTAX_HELP);
 });
 
+shareLinkBtn.addEventListener("click", async () => {
+  const encoded = await compressToBase64(JSON.stringify(collectState()));
+  location.hash = encoded;
+  const url = `${location.origin}${location.pathname}#${encoded}`;
+  try {
+    await navigator.clipboard.writeText(url);
+    shareLinkBtn.textContent = "copied";
+  } catch {
+    shareLinkBtn.textContent = "copy failed";
+  }
+  setTimeout(() => { shareLinkBtn.textContent = "copy link"; }, 1500);
+});
+
 infoEl.addEventListener("click", async () => {
   if (!lastRuleNameForCopy) return;
   try {
@@ -586,5 +680,31 @@ setSeedBand(Number(seedBandEl.value) || 20);
 setBoundaryMode(boundaryModeEl.value);
 setScale(Number(zoomEl.value) || 5);
 applyStepsAutoMode();
-ensureSize();
-onUpdate();
+
+(async () => {
+  const hash = location.hash.slice(1);
+  if (hash) {
+    try {
+      const state: AppState = JSON.parse(await decompressFromBase64(hash));
+      rulesEl.value = state.rules;
+      currentWidth = state.width;
+      widthEl.value = String(state.width);
+      currentSteps = state.steps;
+      stepsEl.value = String(state.steps);
+      stepsAutoEl.checked = state.stepsAuto;
+      autoUpdateEl.checked = state.autoUpdate;
+      boundaryModeEl.value = state.boundaryMode;
+      setBoundaryMode(state.boundaryMode);
+      currentSpeed = state.playSpeed;
+      playSpeedEl.value = String(state.playSpeed);
+      setScale(state.zoom);
+      setSeed(state.seed);
+      setSeedBand(state.seedBand);
+      applyStepsAutoMode();
+    } catch {
+      // ignore invalid hash, fall through to default init
+    }
+  }
+  ensureSize();
+  onUpdate();
+})();

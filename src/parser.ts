@@ -178,9 +178,6 @@ function computeRuleName(entries: ParsedEntry[]): string {
     if (nameTable[i]) n |= 1n << BigInt(i);
   }
   const s = n.toString();
-  if (s.length > 22) {
-    return `rule ${s.slice(0, 20)}.. radius ${maxOffset}`;
-  }
   return `rule ${s} radius ${maxOffset}`;
 }
 
