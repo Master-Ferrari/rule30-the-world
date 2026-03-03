@@ -1,5 +1,5 @@
 import "./style.css";
-import { parseText, fromEntries } from "./parser";
+import { parseText, fromEntries, parseRuleLine } from "./parser";
 import { Renderer } from "./renderer";
 
 // ── DOM ──────────────────────────────────────────────────────
@@ -20,6 +20,8 @@ const boundaryModeEl = document.getElementById("boundaryMode") as HTMLSelectElem
 const stepsAutoEl = document.getElementById("stepsAuto") as HTMLInputElement;
 const autoUpdateEl = document.getElementById("autoUpdate") as HTMLInputElement;
 const coloredEl = document.getElementById("colored") as HTMLInputElement;
+const rulesEditorEl = document.getElementById("rulesEditor") as HTMLDivElement;
+const rulesHighlightEl = document.getElementById("rulesHighlight") as HTMLPreElement;
 const newRandomBtn = document.getElementById("newRandom") as HTMLButtonElement;
 const importRuleNameBtn = document.getElementById("importRuleName") as HTMLButtonElement;
 const exportPngBtn = document.getElementById("exportPng") as HTMLButtonElement;
@@ -280,6 +282,56 @@ function setupWheelScrolling(): void {
   }
 }
 
+// ── Rules highlight ──────────────────────────────────────────
+
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function updateHighlight(): void {
+  const isColored = coloredEl.checked;
+  rulesEditorEl.classList.toggle("coloredActive", isColored);
+
+  if (!isColored) {
+    rulesHighlightEl.style.display = "none";
+    return;
+  }
+  rulesHighlightEl.style.display = "block";
+
+  const lines = rulesEl.value.split("\n");
+
+  // Count total valid rule lines first (for equal hue spacing)
+  let totalLines = 0;
+  for (const line of lines) {
+    try { if (parseRuleLine(line, 0) !== null) totalLines++; } catch { /* skip */ }
+  }
+
+  let ruleIdx = 0;
+  const parts: string[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const esc = escapeHtml(lines[i]);
+    let color: string;
+    try {
+      const e = parseRuleLine(lines[i], ruleIdx);
+      if (e === null) {
+        color = "var(--text-muted)";
+      } else {
+        const hue = totalLines > 1 ? Math.round((ruleIdx / totalLines) * 360) : 0;
+        color = `hsl(${hue},75%,62%)`;
+        ruleIdx++;
+      }
+    } catch {
+      color = "#c7a7a7";
+    }
+    parts.push(`<span style="color:${color}">${esc || " "}</span>`);
+    if (i < lines.length - 1) parts.push("\n");
+  }
+  rulesHighlightEl.innerHTML = parts.join("") + "\n\u00a0";
+
+  rulesHighlightEl.scrollTop = rulesEl.scrollTop;
+  rulesHighlightEl.scrollLeft = rulesEl.scrollLeft;
+}
+
 // ── Share / State serialization ──────────────────────────────
 
 interface AppState {
@@ -459,7 +511,12 @@ function requestUpdate(): void {
 
 // ── Events ───────────────────────────────────────────────────
 
-rulesEl.addEventListener("input", requestUpdate);
+rulesEl.addEventListener("input", () => { updateHighlight(); requestUpdate(); });
+
+rulesEl.addEventListener("scroll", () => {
+  rulesHighlightEl.scrollTop = rulesEl.scrollTop;
+  rulesHighlightEl.scrollLeft = rulesEl.scrollLeft;
+});
 
 newRandomBtn.addEventListener("click", () => {
   setSeed(Math.floor(Math.random() * 0x100000000));
@@ -478,6 +535,7 @@ importRuleNameBtn.addEventListener("click", () => {
   }
 
   rulesEl.value = importedLines.join("\n") + (importedLines.length > 0 ? "\n" : "");
+  updateHighlight();
   onUpdate();
 });
 
@@ -567,6 +625,7 @@ autoUpdateEl.addEventListener("change", () => {
 });
 
 coloredEl.addEventListener("change", () => {
+  updateHighlight();
   requestUpdate();
 });
 
@@ -717,4 +776,5 @@ applyStepsAutoMode();
   }
   ensureSize();
   onUpdate();
+  updateHighlight();
 })();

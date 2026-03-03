@@ -129,24 +129,58 @@ body {
   cursor: row-resize;
 }
 
-/* ── Rules textarea ──────────────────── */
+/* ── Rules editor (textarea + highlight overlay) ── */
 
-#rules {
+#rulesEditor {
   flex: 1 1 0;
   width: 100%;
   min-height: 0;
-  font: 13px/1.6 'PT Mono', monospace;
+  position: relative;
+  overflow: hidden;
   background: var(--elevated);
-  color: var(--text);
   border: 1px solid var(--border);
+}
+
+#rules {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  font: 13px/1.6 'PT Mono', monospace;
+  background: transparent;
+  color: var(--text);
+  border: none;
   padding: var(--sp);
   resize: none;
   outline: none;
   tab-size: 4;
+  z-index: 1;
+}
+
+#rulesEditor.coloredActive #rules {
+  color: transparent;
+  caret-color: var(--text);
 }
 
 #rules::selection {
   background: #264f78;
+}
+
+#rulesHighlight {
+  position: absolute;
+  inset: 0;
+  font: 13px/1.6 'PT Mono', monospace;
+  padding: var(--sp);
+  margin: 0;
+  border: none;
+  background: transparent;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-all;
+  tab-size: 4;
+  pointer-events: none;
+  z-index: 0;
+  display: none;
 }
 
 /* ── Errors panel ────────────────────── */
@@ -487,9 +521,12 @@ body {
     display: none;
   }
 
-  #rules {
+  #rulesEditor {
     flex: 0 0 450px;
-    height: 450px;
+  }
+
+  #rules {
+    height: 100%;
   }
 
   #splitter {

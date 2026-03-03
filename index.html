@@ -51,6 +51,8 @@
         <div class="controlLine">
           <label>steps <input type="number" id="steps" value="1500" min="1"></label>
           <label class="checkboxControl"><input type="checkbox" id="stepsAuto">triangle canvas</label>
+        </div>
+        <div class="controlLine">
           <label class="checkboxControl"><input type="checkbox" id="autoUpdate" checked>update on edits</label>
           <label class="checkboxControl"><input type="checkbox" id="colored">colored</label>
         </div>
@@ -60,13 +62,16 @@
         </div>
       </div>
       <div id="hSplitter"></div>
-      <textarea id="rules" spellcheck="false"># creepers
+      <div id="rulesEditor">
+        <pre id="rulesHighlight" aria-hidden="true"></pre>
+        <textarea id="rules" spellcheck="false"># creepers
 10(1)01
 01(0)10
 01(0)00 -s
 #1(x)1
 1(1)1
 </textarea>
+      </div>
       <div id="errorsPanel" class="hidden">
         <div id="errorsHeader">
           <span>errors</span>
