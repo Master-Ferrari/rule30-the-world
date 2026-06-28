@@ -438,6 +438,10 @@ body {
   cursor: pointer;
 }
 
+#info.infoCopyable:hover {
+  text-decoration: underline;
+}
+
 #info.infoCopyable:hover:not(.infoCopied)::after {
   content: "click to copy rule";
   position: absolute;
@@ -475,7 +479,34 @@ body {
 }
 
 .controlSep {
-  color: var(--border);
+  color: var(--text-muted);
+}
+
+.controlLink {
+  position: relative;
+  display: inline-block;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+
+.controlLink:hover {
+  text-decoration: underline;
+}
+
+.controlLink:hover::after {
+  content: "main page";
+  position: absolute;
+  left: 0;
+  top: calc(100% + 4px);
+  padding: 1px 4px;
+  font-size: 9px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 20;
 }
 
 /* ── Drag state ──────────────────────── */
